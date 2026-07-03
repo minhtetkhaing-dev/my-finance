@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Clarity Finance",
+    "slug": "clarity-finance",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "clarityfinance",
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Clarity Finance to choose your profile photo."
+        }
+      ]
+    ],
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.minhtetkhaing.clarityfinance"
+    },
+    "android": {
+      "package": "com.minhtetkhaing.clarityfinance",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "483d9c8f-408c-4c98-af74-0ccef7210e08"
+      }
+    }
+  }
+}
