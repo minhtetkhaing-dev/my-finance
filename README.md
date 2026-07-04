@@ -43,6 +43,7 @@ In Supabase Dashboard → Authentication → URL Configuration, add:
 ```text
 clarityfinance://auth/callback
 clarityfinance://auth/reset
+clarityfinance://**
 http://localhost:8081/**
 https://your-production-web-domain.com/**
 ```
