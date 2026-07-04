@@ -20,6 +20,7 @@ import { Button, Card, Field, Label, Progress, Title } from "../components/UI";
 import { supabase } from "../lib/supabase";
 import { fonts } from "../theme";
 import { formatMMK } from "../lib/currency";
+import { Language, useLanguage } from "../contexts/LanguageContext";
 
 type Props = {
   categories: Category[];
@@ -31,6 +32,7 @@ type Props = {
 export function ProfileScreen({ profile, transactions, refresh }: Props) {
   const { session } = useAuth();
   const { palette, isDark, toggle } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [capital, setCapital] = useState("0");
@@ -67,6 +69,16 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
     if (error) return Alert.alert("Could not save profile", error.message);
     setEditing(false);
     await refresh();
+  }
+  async function changeLanguage(next: Language) {
+    setLanguage(next);
+    if (!session) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ language: next, updated_at: new Date().toISOString() })
+      .eq("id", session.user.id);
+    if (error) Alert.alert("Could not save language", error.message);
+    else await refresh();
   }
   async function chooseAvatar() {
     if (!session) return;
@@ -209,19 +221,19 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
             onPress={chooseAvatar}
             style={[styles.avatarAction, { color: palette.primary }]}
           >
-            {uploading ? "Uploading…" : "Change photo"}
+            {uploading ? "Uploading…" : t("Change photo")}
           </Text>
           {profile?.avatar_url && (
             <Text
               onPress={removeAvatar}
               style={[styles.avatarAction, { color: palette.danger }]}
             >
-              Remove
+              {t("Remove")}
             </Text>
           )}
         </View>
       </View>
-      <Title style={styles.heading}>Personal Information</Title>
+      <Title style={styles.heading}>{t("Personal Information")}</Title>
       <Card style={{ gap: 14 }}>
         {editing ? (
           <>
@@ -249,14 +261,14 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
           </>
         )}
       </Card>
-      <Title style={styles.heading}>Preferences</Title>
+      <Title style={styles.heading}>{t("Preferences")}</Title>
       <Card style={styles.preference}>
         <Ionicons name="moon-outline" size={25} color={palette.muted} />
         <View style={{ flex: 1 }}>
           <Text style={[styles.infoValue, { color: palette.text }]}>
-            Appearance
+            {t("Appearance")}
           </Text>
-          <Label>{isDark ? "DARK MODE" : "LIGHT MODE"}</Label>
+          <Label>{isDark ? t("Dark Mode") : t("Light Mode")}</Label>
         </View>
         <Switch
           value={isDark}
@@ -264,7 +276,42 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
           trackColor={{ false: palette.primarySoft, true: palette.primary }}
         />
       </Card>
-      <Title style={styles.heading}>Financial Settings</Title>
+      <Card style={{ gap: 12 }}>
+        <View style={styles.preference}>
+          <Ionicons name="language-outline" size={25} color={palette.muted} />
+          <Text style={[styles.infoValue, { color: palette.text, flex: 1 }]}>
+            {t("Language")}
+          </Text>
+        </View>
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          {(["en", "my"] as Language[]).map((item) => (
+            <Pressable
+              key={item}
+              onPress={() => changeLanguage(item)}
+              style={{
+                flex: 1,
+                borderWidth: 1,
+                borderColor: palette.border,
+                borderRadius: 9,
+                padding: 11,
+                backgroundColor:
+                  language === item ? palette.primary : palette.input,
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: fonts.semibold,
+                  textAlign: "center",
+                  color: language === item ? "#fff" : palette.text,
+                }}
+              >
+                {t(item === "en" ? "English" : "Myanmar")}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </Card>
+      <Title style={styles.heading}>{t("Financial Settings")}</Title>
       <Card style={{ gap: 9 }}>
         <Label style={{ color: palette.primary }}>
           OPENING • STARTING CAPITAL
@@ -321,22 +368,28 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
       </Card>
       {editing ? (
         <>
-          <Button title="Save all changes" onPress={save} />
-          <Button title="Cancel" onPress={() => setEditing(false)} secondary />
+          <Button title={t("Save all changes")} onPress={save} />
+          <Button
+            title={t("Cancel")}
+            onPress={() => setEditing(false)}
+            secondary
+          />
         </>
       ) : (
         <Button
-          title="Edit profile and financial settings"
+          title={t("Edit profile and financial settings")}
           onPress={() => setEditing(true)}
           secondary
           icon="settings-outline"
         />
       )}
-      <Button
-        title="Logout"
-        onPress={() => supabase.auth.signOut()}
-        icon="log-out-outline"
-      />
+      {!editing && (
+        <Button
+          title={t("Logout")}
+          onPress={() => supabase.auth.signOut()}
+          icon="log-out-outline"
+        />
+      )}
       <Label style={{ textAlign: "center" }}>VERSION 1.0.0</Label>
     </ScrollView>
   );

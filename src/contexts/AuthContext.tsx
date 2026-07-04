@@ -6,28 +6,54 @@ import {
   useState,
 } from "react";
 import type { Session } from "@supabase/supabase-js";
+import * as Linking from "expo-linking";
+import * as QueryParams from "expo-auth-session/build/QueryParams";
 import { supabase } from "../lib/supabase";
 
 const AuthContext = createContext<{
   session: Session | null;
   loading: boolean;
-}>({ session: null, loading: true });
+  recovery: boolean;
+  setRecovery: (value: boolean) => void;
+}>({ session: null, loading: true, recovery: false, setRecovery: () => {} });
+
 export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [recovery, setRecovery] = useState(false);
   useEffect(() => {
+    async function handleUrl(url: string | null) {
+      if (!url) return;
+      if (url.includes("auth/reset")) setRecovery(true);
+      const { params, errorCode } = QueryParams.getQueryParams(url);
+      if (errorCode) return;
+      if (params.code) await supabase.auth.exchangeCodeForSession(params.code);
+      else if (params.access_token && params.refresh_token)
+        await supabase.auth.setSession({
+          access_token: params.access_token,
+          refresh_token: params.refresh_token,
+        });
+    }
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setLoading(false);
     });
-    const { data } = supabase.auth.onAuthStateChange((_event, next) => {
+    Linking.getInitialURL().then(handleUrl);
+    const linkSubscription = Linking.addEventListener("url", ({ url }) => {
+      handleUrl(url);
+    });
+    const { data } = supabase.auth.onAuthStateChange((event, next) => {
       setSession(next);
+      if (event === "PASSWORD_RECOVERY") setRecovery(true);
       setLoading(false);
     });
-    return () => data.subscription.unsubscribe();
+    return () => {
+      data.subscription.unsubscribe();
+      linkSubscription.remove();
+    };
   }, []);
   return (
-    <AuthContext.Provider value={{ session, loading }}>
+    <AuthContext.Provider value={{ session, loading, recovery, setRecovery }}>
       {children}
     </AuthContext.Provider>
   );

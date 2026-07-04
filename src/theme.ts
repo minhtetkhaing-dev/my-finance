@@ -1,17 +1,17 @@
 export const colors = {
   light: {
-    background: "#F8F9FF",
+    background: "#F4F7FF",
     card: "#FFFFFF",
     text: "#0B1C30",
     muted: "#667085",
-    border: "#D9DFEA",
-    primary: "#00236F",
-    primarySoft: "#DCE9FF",
-    success: "#00714E",
-    successSoft: "#D7FAEB",
-    danger: "#C9151E",
-    dangerSoft: "#FFE0DE",
-    input: "#EFF4FF",
+    border: "#D7E0F2",
+    primary: "#2446A8",
+    primarySoft: "#E1E9FF",
+    success: "#008B62",
+    successSoft: "#D9F8EC",
+    danger: "#D12F4B",
+    dangerSoft: "#FFE2E8",
+    input: "#EDF2FF",
   },
   dark: {
     background: "#0F172A",
@@ -35,9 +35,9 @@ export const fonts = {
   mono: "JetBrainsMono_500Medium",
 };
 export const shadow = {
-  shadowColor: "#1E3A8A",
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.08,
-  shadowRadius: 20,
-  elevation: 3,
+  shadowColor: "#17367D",
+  shadowOffset: { width: 0, height: 7 },
+  shadowOpacity: 0.11,
+  shadowRadius: 18,
+  elevation: 5,
 };

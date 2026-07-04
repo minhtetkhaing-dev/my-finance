@@ -16,6 +16,7 @@ import { formatMMK } from "../lib/currency";
 import { fonts } from "../theme";
 import { CategoryEditorModal } from "./CategoryEditorModal";
 import { TransactionModal } from "./TransactionModal";
+import { useLanguage } from "../contexts/LanguageContext";
 
 export function CategoryDetailModal({
   visible,
@@ -33,6 +34,7 @@ export function CategoryDetailModal({
   onSaved: () => Promise<void>;
 }) {
   const { palette } = useTheme();
+  const { t } = useLanguage();
   const [editCategory, setEditCategory] = useState(false);
   const [transactionOpen, setTransactionOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] =
@@ -79,7 +81,7 @@ export function CategoryDetailModal({
                 color={palette.primary}
               />
               <Text style={[styles.editText, { color: palette.primary }]}>
-                Edit
+                {t("Edit")}
               </Text>
             </Pressable>
           </View>
@@ -110,7 +112,7 @@ export function CategoryDetailModal({
               )}
             </Card>
             <View style={styles.sectionTitle}>
-              <Title style={{ fontSize: 21 }}>Transactions</Title>
+              <Title style={{ fontSize: 21 }}>{t("Transactions")}</Title>
               <Label>{items.length} TOTAL</Label>
             </View>
             <Card style={{ paddingVertical: 0 }}>
@@ -130,7 +132,9 @@ export function CategoryDetailModal({
               )}
             </Card>
             <Button
-              title={`Add ${category.kind}`}
+              title={t(
+                category.kind === "expense" ? "Add expense" : "Add income",
+              )}
               onPress={addTransaction}
               icon="add"
             />

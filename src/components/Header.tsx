@@ -23,11 +23,13 @@ export function Header({ avatarUrl }: { avatarUrl?: string | null }) {
         </View>
       )}
       <Text style={[s.title, { color: palette.primary }]}>Clarity Finance</Text>
-      <Ionicons
-        name="notifications-outline"
-        size={25}
-        color={palette.primary}
-      />
+      <View style={[s.action, { backgroundColor: palette.primarySoft }]}>
+        <Ionicons
+          name="notifications-outline"
+          size={23}
+          color={palette.primary}
+        />
+      </View>
     </View>
   );
 }
@@ -41,7 +43,15 @@ const s = StyleSheet.create({
     maxWidth: 1000,
     width: "100%",
     alignSelf: "center",
+    backgroundColor: "transparent",
   },
-  avatar: { width: 42, height: 42, borderRadius: 21 },
+  avatar: { width: 44, height: 44, borderRadius: 15 },
   title: { fontFamily: fonts.bold, fontSize: 24, flex: 1 },
+  action: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

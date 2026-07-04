@@ -8,6 +8,7 @@ import { TransactionRow } from "../components/TransactionRow";
 import { fonts } from "../theme";
 import { formatMMK } from "../lib/currency";
 import { TransactionModal } from "./TransactionModal";
+import { useLanguage } from "../contexts/LanguageContext";
 
 type Props = {
   categories: Category[];
@@ -77,6 +78,7 @@ function chartData(items: Transaction[], yearly: boolean) {
 
 export function HistoryScreen({ categories, transactions, refresh }: Props) {
   const { palette } = useTheme();
+  const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [yearly, setYearly] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
@@ -122,7 +124,7 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
       <ScrollView contentContainerStyle={styles.page}>
         <View style={styles.intro}>
           <View>
-            <Title style={{ fontSize: 32 }}>Financial{`\n`}History</Title>
+            <Title style={{ fontSize: 32 }}>{t("Financial History")}</Title>
             <Text style={[styles.sub, { color: palette.muted }]}>
               Calculated only from your transactions
             </Text>
@@ -143,7 +145,7 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
                   },
                 ]}
               >
-                {label}
+                {t(label)}
               </Text>
             ))}
           </View>
@@ -236,8 +238,8 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
           onChangeText={setQuery}
         />
         <View style={styles.sectionTitle}>
-          <Title style={{ fontSize: 22 }}>Activity</Title>
-          <Label>TAP TO EDIT</Label>
+          <Title style={{ fontSize: 22 }}>{t("Activity")}</Title>
+          <Label>{t("Tap to edit").toUpperCase()}</Label>
         </View>
         <Card style={{ paddingVertical: 0 }}>
           {filtered.length ? (

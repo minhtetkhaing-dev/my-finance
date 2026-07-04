@@ -3,6 +3,7 @@ create extension if not exists pgcrypto;
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text, phone text, avatar_url text,
+  language text not null default 'en' check (language in ('en','my')),
   initial_capital numeric(14,2) check (initial_capital is null or initial_capital >= 0),
   monthly_spending_cap numeric(14,2) not null default 0 check (monthly_spending_cap >= 0),
   yearly_savings_goal numeric(14,2) not null default 0 check (yearly_savings_goal >= 0),

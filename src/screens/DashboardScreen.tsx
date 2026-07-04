@@ -8,6 +8,7 @@ import { TransactionRow } from "../components/TransactionRow";
 import { fonts } from "../theme";
 import { TransactionModal } from "./TransactionModal";
 import { formatMMK } from "../lib/currency";
+import { useLanguage } from "../contexts/LanguageContext";
 
 type Props = {
   categories: Category[];
@@ -23,6 +24,7 @@ export function DashboardScreen({
   refresh,
 }: Props) {
   const { palette } = useTheme();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
   const now = new Date();
@@ -62,7 +64,9 @@ export function DashboardScreen({
     <>
       <ScrollView contentContainerStyle={styles.page}>
         <Card style={[styles.balance, { backgroundColor: "#1E3A8A" }]}>
-          <Label style={{ color: "#DCE1FF" }}>CURRENT BALANCE</Label>
+          <Label style={{ color: "#DCE1FF" }}>
+            {t("Current Balance").toUpperCase()}
+          </Label>
           <Text style={styles.balanceValue}>{formatMMK(balance)}</Text>
           <View style={styles.trend}>
             <Ionicons name="wallet-outline" color="#fff" />
@@ -70,19 +74,43 @@ export function DashboardScreen({
           </View>
         </Card>
         <View style={styles.stats}>
-          <Card style={styles.stat}>
-            <Ionicons name="arrow-down" size={23} color={palette.success} />
-            <Label>THIS MONTH INCOME</Label>
+          <Card
+            style={[
+              styles.stat,
+              {
+                backgroundColor: palette.successSoft,
+                borderColor: palette.success + "33",
+              },
+            ]}
+          >
+            <View
+              style={[styles.statIcon, { backgroundColor: palette.success }]}
+            >
+              <Ionicons name="arrow-down" size={21} color="#fff" />
+            </View>
+            <Label>{t("This Month Income").toUpperCase()}</Label>
             <Title>{formatMMK(income)}</Title>
           </Card>
-          <Card style={styles.stat}>
-            <Ionicons name="arrow-up" size={23} color={palette.danger} />
-            <Label>THIS MONTH EXPENSE</Label>
+          <Card
+            style={[
+              styles.stat,
+              {
+                backgroundColor: palette.dangerSoft,
+                borderColor: palette.danger + "33",
+              },
+            ]}
+          >
+            <View
+              style={[styles.statIcon, { backgroundColor: palette.danger }]}
+            >
+              <Ionicons name="arrow-up" size={21} color="#fff" />
+            </View>
+            <Label>{t("This Month Expense").toUpperCase()}</Label>
             <Title>{formatMMK(expense)}</Title>
           </Card>
         </View>
         <View style={styles.sectionTitle}>
-          <Title>Budget vs Actual</Title>
+          <Title>{t("Budget vs Actual")}</Title>
           <Label>THIS MONTH</Label>
         </View>
         <Card>
@@ -121,8 +149,8 @@ export function DashboardScreen({
           )}
         </Card>
         <View style={styles.sectionTitle}>
-          <Title>Recent Transactions</Title>
-          <Label>TAP TO EDIT</Label>
+          <Title>{t("Recent Transactions")}</Title>
+          <Label>{t("Tap to edit").toUpperCase()}</Label>
         </View>
         <Card style={{ paddingVertical: 0 }}>
           {transactions.length ? (
@@ -133,7 +161,7 @@ export function DashboardScreen({
             ))
           ) : (
             <View style={styles.empty}>
-              <Label>NO TRANSACTIONS YET</Label>
+              <Label>{t("No transactions yet").toUpperCase()}</Label>
             </View>
           )}
         </Card>
@@ -175,6 +203,13 @@ const styles = StyleSheet.create({
   },
   stats: { flexDirection: "row", gap: 14 },
   stat: { flex: 1, gap: 9 },
+  statIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   sectionTitle: {
     flexDirection: "row",
     alignItems: "center",

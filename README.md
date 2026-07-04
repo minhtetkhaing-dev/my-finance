@@ -31,6 +31,7 @@ npm install
 
 For an existing installation, also run `supabase/migrations/20260703144436_add_initial_capital.sql`. This adds required starting-capital onboarding without deleting existing data.
 Run `supabase/migrations/20260703145419_add_avatar_storage.sql` to create the public avatar bucket and secure per-user upload policies.
+Run `supabase/migrations/20260704051847_add_profile_language.sql` to persist each user's English or Myanmar language preference across devices.
 
 The SQL explicitly grants Data API access to `authenticated`, blocks `anon`, enables RLS, and limits every row to its owner.
 

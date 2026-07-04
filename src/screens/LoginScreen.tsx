@@ -19,46 +19,74 @@ import { supabase } from "../lib/supabase";
 import { useTheme } from "../contexts/ThemeContext";
 import { Button, Card, Field, Label, Title } from "../components/UI";
 import { fonts } from "../theme";
+import { useLanguage } from "../contexts/LanguageContext";
 
+type AuthView = "signIn" | "signUp" | "forgot";
 export function LoginScreen() {
   const { palette } = useTheme();
+  const { t } = useLanguage();
+  const [view, setView] = useState<AuthView>("signIn");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [signUp, setSignUp] = useState(false);
+  const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const authRedirectUrl =
     Platform.OS === "web"
       ? Linking.createURL("auth/callback")
-      : makeRedirectUri({
-          scheme: "clarityfinance",
-          path: "auth/callback",
-        });
+      : makeRedirectUri({ scheme: "clarityfinance", path: "auth/callback" });
+  const resetRedirectUrl =
+    Platform.OS === "web"
+      ? Linking.createURL("auth/reset")
+      : makeRedirectUri({ scheme: "clarityfinance", path: "auth/reset" });
   async function submit() {
+    if (view === "signUp" && password !== confirm)
+      return Alert.alert("Passwords do not match");
     setBusy(true);
-    const result = signUp
-      ? await supabase.auth.signUp({ email, password })
-      : await supabase.auth.signInWithPassword({ email, password });
+    const result =
+      view === "signUp"
+        ? await supabase.auth.signUp({
+            email,
+            password,
+            options: { emailRedirectTo: authRedirectUrl },
+          })
+        : await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (result.error)
-      Alert.alert("Authentication failed", result.error.message);
-    else if (signUp)
+      return Alert.alert("Authentication failed", result.error.message);
+    if (view === "signUp") {
       Alert.alert(
         "Check your email",
-        "Open the confirmation link, then return to sign in.",
+        "Open the confirmation link to activate your account.",
       );
+      setView("signIn");
+    }
+  }
+  async function sendReset() {
+    if (!email) return Alert.alert("Enter your email");
+    setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: resetRedirectUrl,
+    });
+    setBusy(false);
+    Alert.alert(
+      error ? "Could not send reset email" : "Reset email sent",
+      error?.message ?? "Open the link on this phone to choose a new password.",
+    );
   }
   async function google() {
-    const redirectTo = authRedirectUrl;
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo, skipBrowserRedirect: true },
+      options: { redirectTo: authRedirectUrl, skipBrowserRedirect: true },
     });
     if (error || !data.url)
       return Alert.alert(
         "Google sign-in failed",
         error?.message ?? "No authorization URL",
       );
-    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+    const result = await WebBrowser.openAuthSessionAsync(
+      data.url,
+      authRedirectUrl,
+    );
     if (result.type === "success") {
       const { params, errorCode } = QueryParams.getQueryParams(result.url);
       if (errorCode) return Alert.alert("Google sign-in failed", errorCode);
@@ -70,31 +98,22 @@ export function LoginScreen() {
       }
     }
   }
-  async function forgot() {
-    if (!email) return Alert.alert("Enter your email first");
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo:
-        Platform.OS === "web"
-          ? Linking.createURL("auth/reset")
-          : makeRedirectUri({ scheme: "clarityfinance", path: "auth/reset" }),
-    });
-    Alert.alert(
-      error ? "Could not send reset email" : "Email sent",
-      error?.message ?? "Check your inbox for the password reset link.",
-    );
-  }
   return (
-    <SafeAreaView style={[s.safe, { backgroundColor: palette.background }]}>
+    <SafeAreaView
+      style={[styles.safe, { backgroundColor: palette.background }]}
+    >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
-          contentContainerStyle={s.content}
+          contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={s.brand}>
-            <View style={[s.logo, { backgroundColor: palette.primarySoft }]}>
+          <View style={styles.brand}>
+            <View
+              style={[styles.logo, { backgroundColor: palette.primarySoft }]}
+            >
               <Ionicons
                 name="newspaper-outline"
                 size={42}
@@ -102,12 +121,66 @@ export function LoginScreen() {
               />
             </View>
             <Title style={{ fontSize: 36 }}>Clarity Finance</Title>
-            <Text style={[s.welcome, { color: palette.muted }]}>
-              Welcome to Clarity Finance
+            <Text style={[styles.welcome, { color: palette.muted }]}>
+              {t(
+                view === "forgot"
+                  ? "Recover your account"
+                  : "Welcome to Clarity Finance",
+              )}
             </Text>
           </View>
-          <Card style={s.form}>
-            <Label>EMAIL ADDRESS</Label>
+          <Card style={styles.form}>
+            {view !== "forgot" && (
+              <View style={[styles.tabs, { backgroundColor: palette.input }]}>
+                {(["signIn", "signUp"] as const).map((item) => (
+                  <Pressable
+                    key={item}
+                    onPress={() => setView(item)}
+                    style={[
+                      styles.tab,
+                      {
+                        backgroundColor:
+                          view === item ? palette.card : "transparent",
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.tabText,
+                        {
+                          color:
+                            view === item ? palette.primary : palette.muted,
+                        },
+                      ]}
+                    >
+                      {t(item === "signIn" ? "Sign In" : "Sign Up")}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
+            {view === "forgot" && (
+              <>
+                <Pressable
+                  onPress={() => setView("signIn")}
+                  style={styles.back}
+                >
+                  <Ionicons
+                    name="arrow-back"
+                    size={20}
+                    color={palette.primary}
+                  />
+                  <Text style={[styles.link, { color: palette.primary }]}>
+                    {t("Back to sign in")}
+                  </Text>
+                </Pressable>
+                <Title style={{ fontSize: 23 }}>{t("Forgot password?")}</Title>
+                <Text style={[styles.help, { color: palette.muted }]}>
+                  Enter your email and we’ll send a secure password-reset link.
+                </Text>
+              </>
+            )}
+            <Label>{t("Email Address").toUpperCase()}</Label>
             <Field
               icon="mail-outline"
               value={email}
@@ -116,51 +189,76 @@ export function LoginScreen() {
               autoCapitalize="none"
               keyboardType="email-address"
             />
-            <View style={s.passwordTitle}>
-              <Label>PASSWORD</Label>
-              <Pressable onPress={forgot}>
-                <Text style={[s.link, { color: palette.primary }]}>
-                  Forgot Password?
-                </Text>
-              </Pressable>
-            </View>
-            <Field
-              icon="lock-closed-outline"
-              value={password}
-              onChangeText={setPassword}
-              placeholder="At least 6 characters"
-              secureTextEntry
-            />
+            {view !== "forgot" && (
+              <>
+                <View style={styles.passwordTitle}>
+                  <Label>{t("Password").toUpperCase()}</Label>
+                  {view === "signIn" && (
+                    <Pressable onPress={() => setView("forgot")}>
+                      <Text style={[styles.link, { color: palette.primary }]}>
+                        {t("Forgot password?")}
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
+                <Field
+                  icon="lock-closed-outline"
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="At least 8 characters"
+                  secureTextEntry
+                />
+                {view === "signUp" && (
+                  <>
+                    <Label>{t("Confirm Password").toUpperCase()}</Label>
+                    <Field
+                      icon="shield-checkmark-outline"
+                      value={confirm}
+                      onChangeText={setConfirm}
+                      placeholder="Repeat password"
+                      secureTextEntry
+                    />
+                  </>
+                )}
+              </>
+            )}
             <Button
               title={
-                busy ? "Please wait…" : signUp ? "Create Account" : "Sign In"
+                busy
+                  ? "Please wait…"
+                  : view === "forgot"
+                    ? t("Send reset link")
+                    : view === "signUp"
+                      ? t("Create account")
+                      : t("Sign In")
               }
-              onPress={submit}
-              disabled={busy || !email || password.length < 6}
+              onPress={view === "forgot" ? sendReset : submit}
+              disabled={
+                busy ||
+                !email ||
+                (view !== "forgot" && password.length < 8) ||
+                (view === "signUp" && confirm.length < 8)
+              }
             />
-            <View style={s.or}>
-              <View style={[s.line, { backgroundColor: palette.border }]} />
-              <Label>OR</Label>
-              <View style={[s.line, { backgroundColor: palette.border }]} />
-            </View>
-            <Button
-              title="Continue with Google"
-              onPress={google}
-              secondary
-              icon="logo-google"
-            />
-            <Pressable onPress={() => setSignUp((v) => !v)}>
-              <Text style={[s.switch, { color: palette.text }]}>
-                {signUp
-                  ? "Already have an account? "
-                  : "Don’t have an account? "}
-                <Text
-                  style={{ color: palette.primary, fontFamily: fonts.bold }}
-                >
-                  {signUp ? "Sign in" : "Sign up"}
-                </Text>
-              </Text>
-            </Pressable>
+            {view !== "forgot" && (
+              <>
+                <View style={styles.or}>
+                  <View
+                    style={[styles.line, { backgroundColor: palette.border }]}
+                  />
+                  <Label>OR</Label>
+                  <View
+                    style={[styles.line, { backgroundColor: palette.border }]}
+                  />
+                </View>
+                <Button
+                  title={t("Continue with Google")}
+                  onPress={google}
+                  secondary
+                  icon="logo-google"
+                />
+              </>
+            )}
           </Card>
           <Label style={{ textAlign: "center" }}>
             ◈ SECURE AUTHENTICATION • SUPABASE
@@ -170,7 +268,7 @@ export function LoginScreen() {
     </SafeAreaView>
   );
 }
-const s = StyleSheet.create({
+const styles = StyleSheet.create({
   safe: { flex: 1 },
   content: {
     flexGrow: 1,
@@ -191,8 +289,13 @@ const s = StyleSheet.create({
   },
   welcome: { fontFamily: fonts.regular, fontSize: 20 },
   form: { gap: 14, padding: 28 },
+  tabs: { flexDirection: "row", padding: 5, borderRadius: 12 },
+  tab: { flex: 1, padding: 11, borderRadius: 9 },
+  tabText: { textAlign: "center", fontFamily: fonts.semibold, fontSize: 15 },
   passwordTitle: { flexDirection: "row", justifyContent: "space-between" },
   link: { fontFamily: fonts.mono, fontSize: 13 },
+  back: { flexDirection: "row", alignItems: "center", gap: 7 },
+  help: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22 },
   or: {
     flexDirection: "row",
     alignItems: "center",
@@ -200,5 +303,4 @@ const s = StyleSheet.create({
     marginVertical: 6,
   },
   line: { height: 1, flex: 1 },
-  switch: { fontFamily: fonts.regular, textAlign: "center", marginTop: 6 },
 });

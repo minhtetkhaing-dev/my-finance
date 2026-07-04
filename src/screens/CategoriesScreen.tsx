@@ -15,6 +15,7 @@ import { fonts } from "../theme";
 import { formatMMK } from "../lib/currency";
 import { CategoryEditorModal } from "./CategoryEditorModal";
 import { CategoryDetailModal } from "./CategoryDetailModal";
+import { useLanguage } from "../contexts/LanguageContext";
 
 type Props = {
   categories: Category[];
@@ -31,6 +32,7 @@ export function CategoriesScreen({
   refresh,
 }: Props) {
   const { palette } = useTheme();
+  const { t } = useLanguage();
   const [kind, setKind] = useState<CategoryKind>("expense");
   const [editorOpen, setEditorOpen] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -72,7 +74,7 @@ export function CategoriesScreen({
               ]}
             >
               <Text style={[styles.segmentText, { color: palette.text }]}>
-                {value === "expense" ? "Expenses" : "Income"}
+                {t(value === "expense" ? "Expenses" : "Income")}
               </Text>
             </Pressable>
           ))}
@@ -102,7 +104,13 @@ export function CategoriesScreen({
         {list.length === 0 && (
           <Card style={styles.empty}>
             <Ionicons name="shapes-outline" size={36} color={palette.muted} />
-            <Title style={{ fontSize: 18 }}>No {kind} categories</Title>
+            <Title style={{ fontSize: 18 }}>
+              {t(
+                kind === "expense"
+                  ? "No expense categories"
+                  : "No income categories",
+              )}
+            </Title>
             <Text style={[styles.note, { color: palette.muted }]}>
               Create one below, then use it when adding a transaction.
             </Text>
@@ -169,7 +177,7 @@ export function CategoriesScreen({
         >
           <Ionicons name="add" size={26} color={palette.text} />
           <Text style={[styles.addText, { color: palette.text }]}>
-            Add New Category
+            {t("Add New Category")}
           </Text>
         </Pressable>
       </ScrollView>

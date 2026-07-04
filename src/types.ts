@@ -22,6 +22,7 @@ export type Profile = {
   full_name: string | null;
   phone: string | null;
   avatar_url: string | null;
+  language: "en" | "my";
   initial_capital: number | null;
   monthly_spending_cap: number;
   yearly_savings_goal: number;

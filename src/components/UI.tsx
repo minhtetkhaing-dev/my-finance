@@ -1,5 +1,6 @@
-import { PropsWithChildren, ReactNode } from "react";
+import { PropsWithChildren, useEffect, useRef } from "react";
 import {
+  Animated,
   Pressable,
   StyleSheet,
   Text,
@@ -16,17 +17,38 @@ export function Card({
   style,
 }: PropsWithChildren<{ style?: object }>) {
   const { palette } = useTheme();
+  const entrance = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.spring(entrance, {
+      toValue: 1,
+      useNativeDriver: true,
+      damping: 18,
+      stiffness: 180,
+      mass: 0.8,
+    }).start();
+  }, [entrance]);
   return (
-    <View
+    <Animated.View
       style={[
         s.card,
         shadow,
         { backgroundColor: palette.card, borderColor: palette.border },
         style,
+        {
+          opacity: entrance,
+          transform: [
+            {
+              translateY: entrance.interpolate({
+                inputRange: [0, 1],
+                outputRange: [10, 0],
+              }),
+            },
+          ],
+        },
       ]}
     >
       {children}
-    </View>
+    </Animated.View>
   );
 }
 export function Label({
@@ -65,13 +87,16 @@ export function Button({
     <Pressable
       disabled={disabled}
       onPress={onPress}
+      android_ripple={{
+        color: secondary ? palette.primarySoft : "rgba(255,255,255,.2)",
+      }}
       style={({ pressed }) => [
         s.button,
         {
           backgroundColor: secondary ? "transparent" : palette.primary,
           borderColor: palette.primary,
           opacity: disabled ? 0.5 : 1,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
+          transform: [{ scale: pressed ? 0.965 : 1 }],
         },
       ]}
     >
@@ -153,12 +178,12 @@ export function Empty({
   );
 }
 const s = StyleSheet.create({
-  card: { borderWidth: 1, borderRadius: 16, padding: 18 },
+  card: { borderWidth: 1, borderRadius: 20, padding: 18 },
   label: { fontFamily: fonts.mono, fontSize: 12, lineHeight: 18 },
   title: { fontFamily: fonts.bold, fontSize: 24, lineHeight: 32 },
   button: {
     height: 52,
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -168,7 +193,7 @@ const s = StyleSheet.create({
   buttonText: { fontFamily: fonts.semibold, fontSize: 16 },
   field: {
     height: 54,
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1,
     paddingHorizontal: 14,
     alignItems: "center",
@@ -176,7 +201,7 @@ const s = StyleSheet.create({
     gap: 10,
   },
   input: { flex: 1, fontFamily: fonts.regular, fontSize: 16 },
-  track: { height: 8, borderRadius: 8, overflow: "hidden" },
+  track: { height: 9, borderRadius: 9, overflow: "hidden" },
   fill: { height: "100%", borderRadius: 8 },
   empty: { alignItems: "center", padding: 32, gap: 8 },
 });

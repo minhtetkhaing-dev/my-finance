@@ -11,15 +11,17 @@ import {
 import { JetBrainsMono_500Medium } from "@expo-google-fonts/jetbrains-mono";
 import { AuthProvider, useAuth } from "./src/contexts/AuthContext";
 import { ThemeProvider, useTheme } from "./src/contexts/ThemeContext";
+import { LanguageProvider } from "./src/contexts/LanguageContext";
 import { AppShell } from "./src/screens/AppShell";
 import { LoginScreen } from "./src/screens/LoginScreen";
+import { ResetPasswordScreen } from "./src/screens/ResetPasswordScreen";
 import { colors } from "./src/theme";
 import * as WebBrowser from "expo-web-browser";
 
 WebBrowser.maybeCompleteAuthSession();
 
 function Root() {
-  const { session, loading } = useAuth();
+  const { session, loading, recovery } = useAuth();
   const { isDark } = useTheme();
   useEffect(() => {}, [session]);
 
@@ -42,7 +44,13 @@ function Root() {
   return (
     <>
       <StatusBar style={isDark ? "light" : "dark"} />
-      {session ? <AppShell /> : <LoginScreen />}
+      {session && recovery ? (
+        <ResetPasswordScreen />
+      ) : session ? (
+        <AppShell />
+      ) : (
+        <LoginScreen />
+      )}
     </>
   );
 }
@@ -56,10 +64,12 @@ export default function App() {
   });
   if (!loaded) return null;
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <Root />
-      </AuthProvider>
-    </ThemeProvider>
+    <LanguageProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <Root />
+        </AuthProvider>
+      </ThemeProvider>
+    </LanguageProvider>
   );
 }
