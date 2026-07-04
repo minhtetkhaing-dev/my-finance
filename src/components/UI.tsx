@@ -83,35 +83,53 @@ export function Button({
   disabled?: boolean;
 }) {
   const { palette } = useTheme();
+  const pressScale = useRef(new Animated.Value(1)).current;
+  const animatePress = (toValue: number) => {
+    Animated.spring(pressScale, {
+      toValue,
+      useNativeDriver: true,
+      damping: 16,
+      stiffness: 320,
+      mass: 0.45,
+    }).start();
+  };
   return (
     <Pressable
       disabled={disabled}
       onPress={onPress}
+      onPressIn={() => animatePress(0.965)}
+      onPressOut={() => animatePress(1)}
       android_ripple={{
         color: secondary ? palette.primarySoft : "rgba(255,255,255,.2)",
       }}
-      style={({ pressed }) => [
-        s.button,
-        {
-          backgroundColor: secondary ? "transparent" : palette.primary,
-          borderColor: palette.primary,
-          opacity: disabled ? 0.5 : 1,
-          transform: [{ scale: pressed ? 0.965 : 1 }],
-        },
-      ]}
+      style={{ opacity: disabled ? 0.5 : 1 }}
     >
-      {icon && (
-        <Ionicons
-          name={icon}
-          size={20}
-          color={secondary ? palette.primary : "#fff"}
-        />
-      )}
-      <Text
-        style={[s.buttonText, { color: secondary ? palette.primary : "#fff" }]}
+      <Animated.View
+        style={[
+          s.button,
+          {
+            backgroundColor: secondary ? "transparent" : palette.primary,
+            borderColor: palette.primary,
+            transform: [{ scale: pressScale }],
+          },
+        ]}
       >
-        {title}
-      </Text>
+        {icon && (
+          <Ionicons
+            name={icon}
+            size={20}
+            color={secondary ? palette.primary : "#fff"}
+          />
+        )}
+        <Text
+          style={[
+            s.buttonText,
+            { color: secondary ? palette.primary : "#fff" },
+          ]}
+        >
+          {title}
+        </Text>
+      </Animated.View>
     </Pressable>
   );
 }
@@ -145,13 +163,25 @@ export function Progress({
   danger?: boolean;
 }) {
   const { palette } = useTheme();
+  const progress = useRef(new Animated.Value(0)).current;
+  const normalized = Math.min(100, Math.max(2, value));
+  useEffect(() => {
+    Animated.timing(progress, {
+      toValue: normalized,
+      duration: 550,
+      useNativeDriver: false,
+    }).start();
+  }, [normalized, progress]);
   return (
     <View style={[s.track, { backgroundColor: palette.primarySoft }]}>
-      <View
+      <Animated.View
         style={[
           s.fill,
           {
-            width: `${Math.min(100, Math.max(2, value))}%`,
+            width: progress.interpolate({
+              inputRange: [0, 100],
+              outputRange: ["0%", "100%"],
+            }),
             backgroundColor: danger ? palette.danger : palette.success,
           },
         ]}

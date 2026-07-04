@@ -51,19 +51,34 @@ export function AppShell() {
   const { width } = useWindowDimensions();
   const wide = width > 820;
   const transition = useRef(new Animated.Value(1)).current;
+  const direction = useRef(1);
   useEffect(() => {
     if (data.profile?.language) setLanguage(data.profile.language);
   }, [data.profile?.language]);
   function changeTab(next: TabKey) {
     if (next === tab) return;
+    direction.current =
+      tabs.findIndex((item) => item.key === next) >
+      tabs.findIndex((item) => item.key === tab)
+        ? 1
+        : -1;
+    transition.stopAnimation();
     transition.setValue(0);
     setTab(next);
-    Animated.spring(transition, {
-      toValue: 1,
-      useNativeDriver: true,
-      damping: 18,
-      stiffness: 190,
-    }).start();
+    Animated.parallel([
+      Animated.timing(transition, {
+        toValue: 0.55,
+        duration: 110,
+        useNativeDriver: true,
+      }),
+      Animated.spring(transition, {
+        toValue: 1,
+        useNativeDriver: true,
+        damping: 20,
+        stiffness: 180,
+        mass: 0.72,
+      }),
+    ]).start();
   }
   const page =
     tab === "dashboard" ? (
@@ -100,7 +115,13 @@ export function AppShell() {
                   {
                     translateX: transition.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [14, 0],
+                      outputRange: [direction.current * 28, 0],
+                    }),
+                  },
+                  {
+                    scale: transition.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.985, 1],
                     }),
                   },
                 ],
@@ -144,48 +165,110 @@ function Nav({
       {tabs.map((item) => {
         const active = tab === item.key;
         return (
-          <Pressable
+          <NavItem
             key={item.key}
+            active={active}
+            icon={item.icon}
+            activeIcon={item.active}
+            label={t(item.label)}
+            vertical={vertical}
             onPress={() => setTab(item.key)}
-            accessibilityRole="tab"
-            accessibilityLabel={t(item.label)}
-            accessibilityState={{ selected: active }}
-            android_ripple={{ color: palette.primarySoft, borderless: true }}
-            style={({ pressed }) => [
-              s.navItem,
-              vertical && s.navItemVertical,
-              {
-                backgroundColor: active ? palette.primarySoft : "transparent",
-                transform: [{ scale: pressed ? 0.94 : 1 }],
-              },
-            ]}
-          >
-            <View
-              style={[
-                s.iconBubble,
-                active && { backgroundColor: palette.primary },
-              ]}
-            >
-              <Ionicons
-                name={active ? item.active : item.icon}
-                size={23}
-                color={active ? "#fff" : palette.muted}
-              />
-            </View>
-            {vertical && (
-              <Text
-                style={[
-                  s.navLabel,
-                  { color: active ? palette.primary : palette.muted },
-                ]}
-              >
-                {t(item.label)}
-              </Text>
-            )}
-          </Pressable>
+          />
         );
       })}
     </View>
+  );
+}
+
+function NavItem({
+  active,
+  icon,
+  activeIcon,
+  label,
+  vertical,
+  onPress,
+}: {
+  active: boolean;
+  icon: keyof typeof Ionicons.glyphMap;
+  activeIcon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  vertical?: boolean;
+  onPress: () => void;
+}) {
+  const { palette } = useTheme();
+  const selected = useRef(new Animated.Value(active ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.spring(selected, {
+      toValue: active ? 1 : 0,
+      useNativeDriver: true,
+      damping: 16,
+      stiffness: 230,
+      mass: 0.6,
+    }).start();
+  }, [active, selected]);
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="tab"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: active }}
+      android_ripple={{ color: palette.primarySoft, borderless: true }}
+      style={({ pressed }) => [
+        s.navItem,
+        vertical && s.navItemVertical,
+        {
+          backgroundColor: active ? palette.primarySoft : "transparent",
+          transform: [{ scale: pressed ? 0.92 : 1 }],
+        },
+      ]}
+    >
+      <Animated.View
+        style={[
+          s.iconBubble,
+          active && { backgroundColor: palette.primary },
+          {
+            transform: [
+              {
+                scale: selected.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [1, 1.12],
+                }),
+              },
+              {
+                translateY: selected.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, -2],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <Ionicons
+          name={active ? activeIcon : icon}
+          size={23}
+          color={active ? "#fff" : palette.muted}
+        />
+      </Animated.View>
+      {vertical && (
+        <Animated.Text
+          style={[
+            s.navLabel,
+            { color: active ? palette.primary : palette.muted },
+            {
+              opacity: selected.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.72, 1],
+              }),
+            },
+          ]}
+        >
+          {label}
+        </Animated.Text>
+      )}
+    </Pressable>
   );
 }
 const s = StyleSheet.create({
