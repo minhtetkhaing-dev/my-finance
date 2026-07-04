@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Category, Profile, Transaction } from "../types";
 import { useTheme } from "../contexts/ThemeContext";
@@ -25,6 +32,8 @@ export function DashboardScreen({
 }: Props) {
   const { palette } = useTheme();
   const { t } = useLanguage();
+  const { width } = useWindowDimensions();
+  const compact = width < 430;
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
   const now = new Date();
@@ -63,17 +72,30 @@ export function DashboardScreen({
   return (
     <>
       <ScrollView contentContainerStyle={styles.page}>
-        <Card style={[styles.balance, { backgroundColor: "#1E3A8A" }]}>
+        <Card
+          style={[
+            styles.balance,
+            { backgroundColor: palette.primary, borderColor: palette.primary },
+          ]}
+        >
           <Label style={{ color: "#DCE1FF" }}>
             {t("Current Balance").toUpperCase()}
           </Label>
-          <Text style={styles.balanceValue}>{formatMMK(balance)}</Text>
+          <Text
+            style={[styles.balanceValue, compact && styles.balanceValueCompact]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {formatMMK(balance)}
+          </Text>
           <View style={styles.trend}>
             <Ionicons name="wallet-outline" color="#fff" />
-            <Label style={{ color: "#fff" }}>CAPITAL + INCOME − EXPENSES</Label>
+            <Label style={{ color: "#fff" }}>
+              {t("CAPITAL + INCOME − EXPENSES")}
+            </Label>
           </View>
         </Card>
-        <View style={styles.stats}>
+        <View style={[styles.stats, compact && styles.statsCompact]}>
           <Card
             style={[
               styles.stat,
@@ -111,7 +133,7 @@ export function DashboardScreen({
         </View>
         <View style={styles.sectionTitle}>
           <Title>{t("Budget vs Actual")}</Title>
-          <Label>THIS MONTH</Label>
+          <Label>{t("THIS MONTH")}</Label>
         </View>
         <Card>
           {budgets.length ? (
@@ -144,7 +166,7 @@ export function DashboardScreen({
             })
           ) : (
             <View style={styles.empty}>
-              <Label>NO CATEGORY BUDGETS YET</Label>
+              <Label>{t("NO CATEGORY BUDGETS YET")}</Label>
             </View>
           )}
         </Card>
@@ -185,28 +207,36 @@ export function DashboardScreen({
 }
 const styles = StyleSheet.create({
   page: {
-    padding: 20,
-    gap: 18,
+    padding: 16,
+    gap: 16,
     maxWidth: 1000,
     width: "100%",
     alignSelf: "center",
   },
-  balance: { padding: 28, gap: 14 },
-  balanceValue: { fontFamily: fonts.regular, color: "#fff", fontSize: 40 },
+  balance: { padding: 26, gap: 13, borderRadius: 30 },
+  balanceValue: {
+    fontFamily: fonts.bold,
+    color: "#fff",
+    fontSize: 39,
+    letterSpacing: -1.2,
+  },
+  balanceValueCompact: { fontSize: 32 },
   trend: {
     alignSelf: "flex-start",
-    padding: 8,
-    borderRadius: 20,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: 99,
     backgroundColor: "rgba(255,255,255,.12)",
     flexDirection: "row",
     gap: 8,
   },
   stats: { flexDirection: "row", gap: 14 },
-  stat: { flex: 1, gap: 9 },
+  statsCompact: { flexDirection: "column" },
+  stat: { flex: 1, gap: 9, minHeight: 145 },
   statIcon: {
     width: 40,
     height: 40,
-    borderRadius: 14,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -214,7 +244,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 8,
+    marginTop: 12,
   },
   budget: { gap: 8, marginVertical: 10 },
   budgetTop: { flexDirection: "row", justifyContent: "space-between" },
@@ -224,9 +254,9 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 24,
     bottom: 20,
-    height: 60,
-    width: 60,
-    borderRadius: 30,
+    height: 58,
+    width: 58,
+    borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
     elevation: 6,

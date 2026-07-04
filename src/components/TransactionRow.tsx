@@ -32,7 +32,7 @@ export function TransactionRow({ item }: { item: Transaction }) {
         <Text style={[s.name, { color: palette.text }]} numberOfLines={1}>
           {item.merchant}
         </Text>
-        <Text style={[s.note, { color: palette.muted }]}>
+        <Text style={[s.note, { color: palette.muted }]} numberOfLines={1}>
           {new Date(item.occurred_at).toLocaleDateString()} •{" "}
           {item.category?.name || item.note || "Other"}
         </Text>
@@ -42,6 +42,8 @@ export function TransactionRow({ item }: { item: Transaction }) {
           s.amount,
           { color: expense ? palette.danger : palette.success },
         ]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
       >
         {expense ? "-" : "+"}
         {formatMMK(item.amount)}
@@ -51,7 +53,7 @@ export function TransactionRow({ item }: { item: Transaction }) {
 }
 const s = StyleSheet.create({
   row: {
-    minHeight: 74,
+    minHeight: 78,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
@@ -60,11 +62,11 @@ const s = StyleSheet.create({
   icon: {
     height: 48,
     width: 48,
-    borderRadius: 24,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
   },
   name: { fontFamily: fonts.semibold, fontSize: 16 },
   note: { fontFamily: fonts.regular, fontSize: 13, marginTop: 3 },
-  amount: { fontFamily: fonts.bold, fontSize: 16 },
+  amount: { fontFamily: fonts.bold, fontSize: 16, maxWidth: "38%" },
 });

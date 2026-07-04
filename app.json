@@ -11,6 +11,13 @@
         {
           "photosPermission": "Allow Clarity Finance to choose your profile photo."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#5B50E6",
+          "defaultChannel": "finance-alerts"
+        }
       ]
     ],
     "icon": "./assets/icon.png",

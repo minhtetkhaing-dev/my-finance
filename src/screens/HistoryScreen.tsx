@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import Svg, { Circle, Line, Path } from "react-native-svg";
 import { Category, Profile, Transaction } from "../types";
 import { useTheme } from "../contexts/ThemeContext";
@@ -79,6 +86,8 @@ function chartData(items: Transaction[], yearly: boolean) {
 export function HistoryScreen({ categories, transactions, refresh }: Props) {
   const { palette } = useTheme();
   const { t } = useLanguage();
+  const { width } = useWindowDimensions();
+  const compact = width < 480;
   const [query, setQuery] = useState("");
   const [yearly, setYearly] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
@@ -122,11 +131,13 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
   return (
     <>
       <ScrollView contentContainerStyle={styles.page}>
-        <View style={styles.intro}>
-          <View>
-            <Title style={{ fontSize: 32 }}>{t("Financial History")}</Title>
+        <View style={[styles.intro, compact && styles.introCompact]}>
+          <View style={{ flex: 1 }}>
+            <Title style={{ fontSize: compact ? 27 : 32 }}>
+              {t("Financial History")}
+            </Title>
             <Text style={[styles.sub, { color: palette.muted }]}>
-              Calculated only from your transactions
+              {t("Calculated only from your transactions")}
             </Text>
           </View>
           <View
@@ -153,7 +164,7 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
         <Card>
           <View style={styles.chartTop}>
             <View>
-              <Label>NET INCOME VS EXPENSE</Label>
+              <Label>{t("NET INCOME VS EXPENSE")}</Label>
               <Title>{formatMMK(currentNet)}</Title>
             </View>
             <Label
@@ -168,8 +179,8 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
               }}
             >
               {change == null
-                ? "NO PREVIOUS DATA"
-                : `${positive ? "+" : ""}${change.toFixed(1)}%\nVS LAST ${yearly ? "YEAR" : "MONTH"}`}
+                ? t("NO PREVIOUS DATA")
+                : `${positive ? "+" : ""}${change.toFixed(1)}%\n${t(yearly ? "VS LAST YEAR" : "VS LAST MONTH")}`}
             </Label>
           </View>
           {currentTransactions.length ? (
@@ -211,7 +222,13 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
             </>
           ) : (
             <View style={styles.noData}>
-              <Label>NO TRANSACTIONS IN THIS {yearly ? "YEAR" : "MONTH"}</Label>
+              <Label>
+                {t(
+                  yearly
+                    ? "NO TRANSACTIONS IN THIS YEAR"
+                    : "NO TRANSACTIONS IN THIS MONTH",
+                )}
+              </Label>
             </View>
           )}
           <View style={styles.summary}>
@@ -220,20 +237,20 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
                 currentTransactions.filter((item) => item.kind === "income")
                   .length
               }{" "}
-              INCOME ENTRIES
+              {t("INCOME ENTRIES")}
             </Label>
             <Label>
               {
                 currentTransactions.filter((item) => item.kind === "expense")
                   .length
               }{" "}
-              EXPENSE ENTRIES
+              {t("EXPENSE ENTRIES")}
             </Label>
           </View>
         </Card>
         <Field
           icon="search-outline"
-          placeholder="Search this period…"
+          placeholder={t("Search this period…")}
           value={query}
           onChangeText={setQuery}
         />
@@ -250,7 +267,7 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
             ))
           ) : (
             <View style={styles.noData}>
-              <Label>NO REAL TRANSACTIONS TO SHOW</Label>
+              <Label>{t("NO REAL TRANSACTIONS TO SHOW")}</Label>
             </View>
           )}
         </Card>
@@ -267,8 +284,8 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
 }
 const styles = StyleSheet.create({
   page: {
-    padding: 20,
-    gap: 20,
+    padding: 16,
+    gap: 18,
     maxWidth: 1000,
     width: "100%",
     alignSelf: "center",
@@ -278,13 +295,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-end",
   },
+  introCompact: { alignItems: "stretch", gap: 12 },
   sub: { fontFamily: fonts.regular, fontSize: 15, marginTop: 4 },
-  toggle: { padding: 5, borderRadius: 14, flexDirection: "row" },
+  toggle: { padding: 5, borderRadius: 18, flexDirection: "row" },
   toggleText: {
     fontFamily: fonts.mono,
     fontSize: 12,
     padding: 9,
-    borderRadius: 9,
+    borderRadius: 14,
     overflow: "hidden",
   },
   chartTop: { flexDirection: "row", justifyContent: "space-between" },

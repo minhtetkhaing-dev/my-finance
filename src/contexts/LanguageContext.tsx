@@ -12,6 +12,7 @@ const my: Record<string, string> = {
   Dashboard: "ပင်မ",
   History: "မှတ်တမ်း",
   Categories: "အမျိုးအစားများ",
+  Insights: "သုံးသပ်ချက်",
   Profile: "ကိုယ်ရေး",
   English: "အင်္ဂလိပ်",
   Myanmar: "မြန်မာ",
@@ -72,6 +73,115 @@ const my: Record<string, string> = {
   "Update password": "စကားဝှက် ပြောင်းရန်",
   "Set your starting capital": "အစပြုမတည်ငွေ သတ်မှတ်ပါ",
   "Start tracking": "စာရင်းစတင်ရန်",
+  "Financial insights": "ငွေကြေးဆိုင်ရာ သုံးသပ်ချက်များ",
+  "A live view calculated from your real activity":
+    "သင့်ငွေစာရင်းအစစ်အမှန်မှ တွက်ချက်ထားသော လက်ရှိအခြေအနေ",
+  "FINANCIAL HEALTH": "ငွေကြေးကျန်းမာမှု",
+  "You are building momentum": "ငွေကြေးအင်အား တိုးတက်နေပါသည်",
+  "You are making progress": "တိုးတက်မှု ရှိနေပါသည်",
+  "A few changes can help": "အနည်းငယ် ပြောင်းလဲခြင်းဖြင့် ပိုကောင်းနိုင်ပါသည်",
+  "Your score considers savings, budget pace, and yearly goal progress.":
+    "ဤအမှတ်သည် စုဆောင်းမှု၊ ဘတ်ဂျက်အသုံးနှုန်းနှင့် နှစ်စဉ်ရည်မှန်းချက်ကို ထည့်တွက်ထားသည်။",
+  "Safe to spend": "စိတ်ချစွာ သုံးနိုင်ငွေ",
+  "Set a spending cap": "အသုံးစရိတ်ကန့်သတ်ချက် သတ်မှတ်ပါ",
+  "Savings rate": "စုဆောင်းနှုန်း",
+  "Needs income data": "ဝင်ငွေစာရင်း လိုအပ်သည်",
+  "MONTHLY SPENDING PACE": "လစဉ် အသုံးစရိတ်နှုန်း",
+  "No cap set": "ကန့်သတ်ချက် မရှိသေးပါ",
+  "On pace": "သတ်မှတ်နှုန်းအတွင်း",
+  "Above pace": "သတ်မှတ်နှုန်း ကျော်နေသည်",
+  "You have spent {spent} of your {cap} monthly cap.":
+    "လစဉ်ကန့်သတ်ငွေ {cap} မှ {spent} သုံးထားပါသည်။",
+  "Set a monthly spending cap in Profile to unlock pacing guidance.":
+    "အသုံးနှုန်းလမ်းညွှန် ရရှိရန် ကိုယ်ရေးစာမျက်နှာတွင် လစဉ်ကန့်သတ်ငွေ သတ်မှတ်ပါ။",
+  "YEARLY SAVINGS GOAL": "နှစ်စဉ် စုဆောင်းငွေ ရည်မှန်းချက်",
+  "Goal: {goal}": "ရည်မှန်းချက်: {goal}",
+  "Add a yearly goal in Profile to track your progress.":
+    "တိုးတက်မှုကြည့်ရန် ကိုယ်ရေးစာမျက်နှာတွင် နှစ်စဉ်ရည်မှန်းချက် ထည့်ပါ။",
+  "This month at a glance": "ယခုလ အကျဉ်းချုပ်",
+  "Net cash flow": "အသားတင်ငွေစီးဆင်းမှု",
+  "Top spending category": "အသုံးအများဆုံး အမျိုးအစား",
+  "No spending yet": "အသုံးစရိတ် မရှိသေးပါ",
+  "Compared with last month": "ပြီးခဲ့သောလနှင့် နှိုင်းယှဉ်ချက်",
+  "Not enough history": "နှိုင်းယှဉ်ရန် မှတ်တမ်းမလုံလောက်ပါ",
+  "CAPITAL + INCOME − EXPENSES": "မတည်ငွေ + ဝင်ငွေ − ထွက်ငွေ",
+  "THIS MONTH": "ယခုလ",
+  "NO CATEGORY BUDGETS YET": "အမျိုးအစားဘတ်ဂျက် မရှိသေးပါ",
+  "TOTAL MONTHLY SPENDING": "စုစုပေါင်း လစဉ်အသုံးစရိတ်",
+  "TOTAL MONTHLY INCOME": "စုစုပေါင်း လစဉ်ဝင်ငွေ",
+  "Tap a category to change its name, icon, color, or budget.":
+    "အမည်၊ အိုင်ကွန်၊ အရောင် သို့မဟုတ် ဘတ်ဂျက်ပြင်ရန် အမျိုးအစားကို နှိပ်ပါ။",
+  "Create one below, then use it when adding a transaction.":
+    "အောက်တွင် အသစ်ဖန်တီးပြီး ငွေစာရင်းထည့်သောအခါ အသုံးပြုပါ။",
+  TRANSACTIONS: "ငွေစာရင်းများ",
+  BUDGET: "ဘတ်ဂျက်",
+  "Calculated only from your transactions":
+    "သင့်ငွေစာရင်းများမှသာ တွက်ချက်ထားသည်",
+  "NET INCOME VS EXPENSE": "အသားတင် ဝင်ငွေနှင့် ထွက်ငွေ",
+  "NO PREVIOUS DATA": "ယခင်အချက်အလက် မရှိပါ",
+  "VS LAST YEAR": "ပြီးခဲ့သောနှစ်နှင့် နှိုင်းယှဉ်",
+  "VS LAST MONTH": "ပြီးခဲ့သောလနှင့် နှိုင်းယှဉ်",
+  "NO TRANSACTIONS IN THIS YEAR": "ယခုနှစ် ငွေစာရင်း မရှိပါ",
+  "NO TRANSACTIONS IN THIS MONTH": "ယခုလ ငွေစာရင်း မရှိပါ",
+  "INCOME ENTRIES": "ဝင်ငွေစာရင်း",
+  "EXPENSE ENTRIES": "ထွက်ငွေစာရင်း",
+  "Search this period…": "ဤကာလအတွင်း ရှာဖွေပါ…",
+  "NO REAL TRANSACTIONS TO SHOW": "ပြသရန် ငွေစာရင်းအစစ် မရှိပါ",
+  "Enter valid MMK amounts": "မှန်ကန်သော ကျပ်ငွေပမာဏများ ထည့်ပါ",
+  "Could not save profile": "ကိုယ်ရေးအချက်အလက် မသိမ်းနိုင်ပါ",
+  "Could not save language": "ဘာသာစကား မသိမ်းနိုင်ပါ",
+  "Photo permission needed": "ဓာတ်ပုံအသုံးပြုခွင့် လိုအပ်သည်",
+  "Allow photo-library access to choose an avatar.":
+    "ပရိုဖိုင်ပုံရွေးရန် ဓာတ်ပုံများ အသုံးပြုခွင့်ပေးပါ။",
+  "Could not read this image": "ဤပုံကို ဖတ်မရပါ",
+  "Remove avatar?": "ပရိုဖိုင်ပုံ ဖယ်ရှားမည်လား?",
+  "Your uploaded avatar will be deleted.":
+    "တင်ထားသော ပရိုဖိုင်ပုံကို ဖျက်ပါမည်။",
+  "Your Profile": "သင့်ကိုယ်ရေး",
+  "Uploading…": "တင်နေသည်…",
+  "FULL NAME": "အမည်အပြည့်အစုံ",
+  "PHONE NUMBER": "ဖုန်းနံပါတ်",
+  "Phone Number": "ဖုန်းနံပါတ်",
+  "Not added": "မထည့်ရသေးပါ",
+  "OPENING • STARTING CAPITAL": "အစပြု • မတည်ငွေ",
+  "Changing this recalculates the current balance.":
+    "ဤငွေကို ပြောင်းလဲပါက လက်ရှိလက်ကျန်ကို ပြန်တွက်ပါမည်။",
+  "MONTHLY • SPENDING CAP": "လစဉ် • အသုံးစရိတ်ကန့်သတ်ချက်",
+  "ACTUAL SPENDING": "အမှန်တကယ် အသုံးစရိတ်",
+  "YEARLY • SAVINGS GOAL": "နှစ်စဉ် • စုဆောင်းငွေ ရည်မှန်းချက်",
+  "YEAR NET": "နှစ်စဉ် အသားတင်ငွေ",
+  "Add activity to unlock your score": "အမှတ်ကြည့်ရန် ငွေစာရင်း စတင်ထည့်ပါ",
+  "Your score will appear after you add real income or expense activity.":
+    "ဝင်ငွေ သို့မဟုတ် ထွက်ငွေအစစ် ထည့်ပြီးနောက် အမှတ်ပေါ်လာပါမည်။",
+  Notifications: "အသိပေးချက်များ",
+  "{count} unread alerts": "မဖတ်ရသေးသော အသိပေးချက် {count} ခု",
+  "You are all caught up": "အသိပေးချက်အားလုံး ဖတ်ပြီးပါပြီ",
+  "No alerts right now": "ယခု အသိပေးချက် မရှိပါ",
+  "Important budget and goal updates will appear here.":
+    "အရေးကြီးသော ဘတ်ဂျက်နှင့် ရည်မှန်းချက်အခြေအနေများ ဤနေရာတွင် ပေါ်လာပါမည်။",
+  "Mark all as read": "အားလုံးကို ဖတ်ပြီးဟု သတ်မှတ်ရန်",
+  "Monthly limit exceeded": "လစဉ်ကန့်သတ်ငွေ ကျော်သွားပါပြီ",
+  "You have spent {spent}, which is above your {limit} limit.":
+    "{limit} ကန့်သတ်ငွေထက် ကျော်လွန်ပြီး {spent} သုံးထားပါသည်။",
+  "Approaching your monthly limit": "လစဉ်ကန့်သတ်ငွေ နီးကပ်နေပါပြီ",
+  "You have used {percent}% of your spending limit.":
+    "အသုံးစရိတ်ကန့်သတ်ငွေ၏ {percent}% သုံးထားပါသည်။",
+  "Category budget exceeded": "အမျိုးအစားဘတ်ဂျက် ကျော်သွားပါပြီ",
+  "{category} is {amount} over budget.":
+    "{category} သည် ဘတ်ဂျက်ထက် {amount} ကျော်နေပါသည်။",
+  "Savings goal reached!": "စုဆောင်းငွေ ရည်မှန်းချက် ပြည့်ပါပြီ!",
+  "You reached your {goal} yearly savings goal.":
+    "နှစ်စဉ်စုဆောင်းငွေ {goal} ရည်မှန်းချက် ပြည့်မီပါပြီ။",
+  "Transactions need attention": "ပြန်လည်စစ်ဆေးရန် ငွေစာရင်းများ ရှိသည်",
+  "{count} transactions have no category.":
+    "ငွေစာရင်း {count} ခုတွင် အမျိုးအစား မသတ်မှတ်ရသေးပါ။",
+  "Device notifications enabled": "စက်အသိပေးချက်များ ဖွင့်ထားပါသည်",
+  "Enable notifications in Settings": "Settings တွင် အသိပေးချက်များ ဖွင့်ပါ",
+  "Get alerts on this device": "ဤစက်တွင် အသိပေးချက်များ ရယူပါ",
+  "New financial alerts will appear on this device.":
+    "ငွေကြေးအသိပေးချက်အသစ်များ ဤစက်တွင် ပေါ်လာပါမည်။",
+  "Receive budget and savings alerts outside the app.":
+    "အက်ပ်ပြင်ပတွင် ဘတ်ဂျက်နှင့် စုဆောင်းငွေ အသိပေးချက်များ ရယူပါ။",
 };
 const Context = createContext<{
   language: Language;

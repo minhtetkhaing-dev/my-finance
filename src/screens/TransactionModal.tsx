@@ -344,14 +344,14 @@ export function TransactionModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(2,10,30,.55)",
+    backgroundColor: "rgba(15,14,25,.66)",
     justifyContent: "flex-end",
   },
   sheet: {
     maxHeight: "90%",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    padding: 20,
     paddingBottom: 36,
   },
   heading: {
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
   segmentItem: {
     flex: 1,
     padding: 12,
-    borderRadius: 10,
+    borderRadius: 17,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
     minHeight: 42,
     borderWidth: 1,
     paddingHorizontal: 13,
-    borderRadius: 21,
+    borderRadius: 16,
     flexDirection: "row",
     alignItems: "center",
     gap: 6,

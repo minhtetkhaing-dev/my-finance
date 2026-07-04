@@ -273,14 +273,14 @@ export function CategoryEditorModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(2,10,30,.55)",
+    backgroundColor: "rgba(15,14,25,.66)",
     justifyContent: "flex-end",
   },
   sheet: {
     maxHeight: "92%",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    padding: 20,
     paddingBottom: 36,
   },
   heading: {
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   previewIcon: {
     width: 68,
     height: 68,
-    borderRadius: 34,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   iconOption: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",

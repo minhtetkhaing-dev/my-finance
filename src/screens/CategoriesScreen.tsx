@@ -81,9 +81,13 @@ export function CategoriesScreen({
         </View>
         <Card style={styles.summary}>
           <Label>
-            TOTAL MONTHLY {kind === "expense" ? "SPENDING" : "INCOME"}
+            {t(
+              kind === "expense"
+                ? "TOTAL MONTHLY SPENDING"
+                : "TOTAL MONTHLY INCOME",
+            )}
           </Label>
-          <Title style={{ fontSize: 34 }}>{formatMMK(total)}</Title>
+          <Title style={{ fontSize: 30 }}>{formatMMK(total)}</Title>
           <Progress
             value={
               kind === "expense" && profile?.monthly_spending_cap
@@ -97,7 +101,7 @@ export function CategoriesScreen({
             }
           />
           <Text style={[styles.note, { color: palette.muted }]}>
-            Tap a category to change its name, icon, color, or budget.
+            {t("Tap a category to change its name, icon, color, or budget.")}
           </Text>
         </Card>
 
@@ -112,7 +116,7 @@ export function CategoriesScreen({
               )}
             </Title>
             <Text style={[styles.note, { color: palette.muted }]}>
-              Create one below, then use it when adding a transaction.
+              {t("Create one below, then use it when adding a transaction.")}
             </Text>
           </Card>
         )}
@@ -150,9 +154,13 @@ export function CategoriesScreen({
                     <Text style={[styles.name, { color: palette.text }]}>
                       {category.name}
                     </Text>
-                    <Label>{categoryTransactions.length} TRANSACTIONS</Label>
+                    <Label>
+                      {categoryTransactions.length} {t("TRANSACTIONS")}
+                    </Label>
                     {category.monthly_budget != null && (
-                      <Label>BUDGET {formatMMK(category.monthly_budget)}</Label>
+                      <Label>
+                        {t("BUDGET")} {formatMMK(category.monthly_budget)}
+                      </Label>
                     )}
                   </View>
                   <View style={styles.value}>
@@ -202,34 +210,39 @@ export function CategoriesScreen({
 
 const styles = StyleSheet.create({
   page: {
-    padding: 20,
-    gap: 18,
+    padding: 16,
+    gap: 16,
     maxWidth: 1000,
     width: "100%",
     alignSelf: "center",
   },
-  segment: { padding: 6, borderRadius: 16, flexDirection: "row" },
-  segmentItem: { flex: 1, padding: 11, borderRadius: 11 },
+  segment: { padding: 5, borderRadius: 20, flexDirection: "row" },
+  segmentItem: { flex: 1, padding: 12, borderRadius: 16 },
   segmentText: { textAlign: "center", fontFamily: fonts.mono, fontSize: 16 },
-  summary: { gap: 12 },
+  summary: { gap: 12, borderRadius: 28 },
   note: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22 },
   empty: { alignItems: "center", gap: 7 },
-  category: { flexDirection: "row", alignItems: "center", gap: 12 },
+  category: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    minHeight: 94,
+  },
   icon: {
     width: 58,
     height: 58,
-    borderRadius: 29,
+    borderRadius: 19,
     alignItems: "center",
     justifyContent: "center",
   },
   categoryInfo: { flex: 1, gap: 3 },
   name: { fontFamily: fonts.semibold, fontSize: 18 },
-  value: { width: 125, gap: 10 },
+  value: { maxWidth: "38%", minWidth: 88, gap: 10 },
   amount: { fontFamily: fonts.regular, fontSize: 15, textAlign: "right" },
   add: {
     borderWidth: 2,
     borderStyle: "dashed",
-    borderRadius: 16,
+    borderRadius: 22,
     padding: 22,
     flexDirection: "row",
     justifyContent: "center",

@@ -18,8 +18,10 @@ import { DashboardScreen } from "./DashboardScreen";
 import { HistoryScreen } from "./HistoryScreen";
 import { CategoriesScreen } from "./CategoriesScreen";
 import { ProfileScreen } from "./ProfileScreen";
+import { InsightsScreen } from "./InsightsScreen";
 import { CapitalOnboardingModal } from "./CapitalOnboardingModal";
 import { useLanguage } from "../contexts/LanguageContext";
+import { buildFinanceNotifications } from "../lib/financeNotifications";
 
 const tabs = [
   {
@@ -36,6 +38,12 @@ const tabs = [
     active: "shapes",
   },
   {
+    key: "insights",
+    label: "Insights",
+    icon: "sparkles-outline",
+    active: "sparkles",
+  },
+  {
     key: "profile",
     label: "Profile",
     icon: "person-outline",
@@ -47,11 +55,17 @@ export function AppShell() {
   const [tab, setTab] = useState<TabKey>("dashboard");
   const { palette } = useTheme();
   const data = useFinanceData();
-  const { setLanguage } = useLanguage();
+  const { setLanguage, t } = useLanguage();
   const { width } = useWindowDimensions();
   const wide = width > 820;
   const transition = useRef(new Animated.Value(1)).current;
   const direction = useRef(1);
+  const notifications = buildFinanceNotifications(
+    data.categories,
+    data.transactions,
+    data.profile,
+    t,
+  );
   useEffect(() => {
     if (data.profile?.language) setLanguage(data.profile.language);
   }, [data.profile?.language]);
@@ -87,6 +101,8 @@ export function AppShell() {
       <HistoryScreen {...data} />
     ) : tab === "categories" ? (
       <CategoriesScreen {...data} />
+    ) : tab === "insights" ? (
+      <InsightsScreen {...data} />
     ) : (
       <ProfileScreen {...data} />
     );
@@ -95,7 +111,11 @@ export function AppShell() {
       <View style={[s.shell, wide && s.wide]}>
         {wide && <Nav tab={tab} setTab={changeTab} vertical />}
         <View style={s.main}>
-          <Header avatarUrl={data.profile?.avatar_url} />
+          <Header
+            avatarUrl={data.profile?.avatar_url}
+            notifications={notifications}
+            userId={data.profile?.id}
+          />
           {data.error && (
             <Text
               style={[
@@ -285,19 +305,28 @@ const s = StyleSheet.create({
     borderRadius: 12,
   },
   nav: {
-    height: Platform.OS === "ios" ? 82 : 72,
-    borderTopWidth: 1,
+    height: Platform.OS === "ios" ? 76 : 66,
+    borderWidth: 1,
     flexDirection: "row",
-    paddingHorizontal: 24,
-    paddingBottom: Platform.OS === "ios" ? 8 : 4,
+    paddingHorizontal: 8,
+    paddingBottom: Platform.OS === "ios" ? 5 : 0,
     alignItems: "center",
     justifyContent: "space-around",
     zIndex: 10,
+    marginHorizontal: 12,
+    marginBottom: Platform.OS === "ios" ? 7 : 10,
+    borderRadius: 26,
+    overflow: "hidden",
   },
   navVertical: {
     width: 220,
     height: "100%",
+    marginHorizontal: 0,
+    marginBottom: 0,
+    borderRadius: 0,
     borderTopWidth: 0,
+    borderLeftWidth: 0,
+    borderBottomWidth: 0,
     borderRightWidth: 1,
     flexDirection: "column",
     justifyContent: "center",
@@ -305,9 +334,9 @@ const s = StyleSheet.create({
     padding: 16,
   },
   navItem: {
-    width: 56,
-    height: 52,
-    borderRadius: 18,
+    width: 52,
+    height: 50,
+    borderRadius: 17,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -321,8 +350,8 @@ const s = StyleSheet.create({
     gap: 12,
   },
   iconBubble: {
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",

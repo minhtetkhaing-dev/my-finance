@@ -85,7 +85,7 @@ export function CapitalOnboardingModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(2,10,30,.72)",
+    backgroundColor: "rgba(15,14,25,.76)",
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
@@ -93,9 +93,9 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     maxWidth: 500,
-    borderRadius: 20,
+    borderRadius: 32,
     borderWidth: 1,
-    padding: 26,
+    padding: 24,
     gap: 16,
   },
   icon: {

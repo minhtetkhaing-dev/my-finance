@@ -52,7 +52,7 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
       Number(value.replace(/,/g, "")),
     );
     if (values.some((value) => !Number.isFinite(value) || value < 0))
-      return Alert.alert("Enter valid MMK amounts");
+      return Alert.alert(t("Enter valid MMK amounts"));
     const { error } = await supabase
       .from("profiles")
       .upsert({
@@ -66,7 +66,7 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
       })
       .select()
       .single();
-    if (error) return Alert.alert("Could not save profile", error.message);
+    if (error) return Alert.alert(t("Could not save profile"), error.message);
     setEditing(false);
     await refresh();
   }
@@ -77,7 +77,7 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
       .from("profiles")
       .update({ language: next, updated_at: new Date().toISOString() })
       .eq("id", session.user.id);
-    if (error) Alert.alert("Could not save language", error.message);
+    if (error) Alert.alert(t("Could not save language"), error.message);
     else await refresh();
   }
   async function chooseAvatar() {
@@ -85,8 +85,8 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted)
       return Alert.alert(
-        "Photo permission needed",
-        "Allow photo-library access to choose an avatar.",
+        t("Photo permission needed"),
+        t("Allow photo-library access to choose an avatar."),
       );
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
@@ -97,7 +97,7 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
     });
     if (result.canceled) return;
     const asset = result.assets[0];
-    if (!asset.base64) return Alert.alert("Could not read this image");
+    if (!asset.base64) return Alert.alert(t("Could not read this image"));
     setUploading(true);
     const path = `${session.user.id}/avatar`;
     const upload = await supabase.storage
@@ -131,33 +131,42 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
   }
   async function removeAvatar() {
     if (!session) return;
-    Alert.alert("Remove avatar?", "Your uploaded avatar will be deleted.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Remove",
-        style: "destructive",
-        onPress: async () => {
-          setUploading(true);
-          const path = `${session.user.id}/avatar`;
-          const removed = await supabase.storage.from("avatars").remove([path]);
-          if (removed.error) {
+    Alert.alert(
+      t("Remove avatar?"),
+      t("Your uploaded avatar will be deleted."),
+      [
+        { text: t("Cancel"), style: "cancel" },
+        {
+          text: t("Remove"),
+          style: "destructive",
+          onPress: async () => {
+            setUploading(true);
+            const path = `${session.user.id}/avatar`;
+            const removed = await supabase.storage
+              .from("avatars")
+              .remove([path]);
+            if (removed.error) {
+              setUploading(false);
+              return Alert.alert(
+                "Could not remove avatar",
+                removed.error.message,
+              );
+            }
+            const { error } = await supabase
+              .from("profiles")
+              .update({
+                avatar_url: null,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", session.user.id);
             setUploading(false);
-            return Alert.alert(
-              "Could not remove avatar",
-              removed.error.message,
-            );
-          }
-          const { error } = await supabase
-            .from("profiles")
-            .update({ avatar_url: null, updated_at: new Date().toISOString() })
-            .eq("id", session.user.id);
-          setUploading(false);
-          if (error)
-            return Alert.alert("Could not update profile", error.message);
-          await refresh();
+            if (error)
+              return Alert.alert("Could not update profile", error.message);
+            await refresh();
+          },
         },
-      },
-    ]);
+      ],
+    );
   }
   const avatar = profile?.avatar_url || session?.user.user_metadata.avatar_url;
   const now = new Date();
@@ -212,7 +221,7 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
             )}
           </View>
         </Pressable>
-        <Title>{name || "Your Profile"}</Title>
+        <Title>{name || t("Your Profile")}</Title>
         <Text style={[styles.email, { color: palette.muted }]}>
           {session?.user.email}
         </Text>
@@ -221,7 +230,7 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
             onPress={chooseAvatar}
             style={[styles.avatarAction, { color: palette.primary }]}
           >
-            {uploading ? "Uploading…" : t("Change photo")}
+            {uploading ? t("Uploading…") : t("Change photo")}
           </Text>
           {profile?.avatar_url && (
             <Text
@@ -237,9 +246,9 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
       <Card style={{ gap: 14 }}>
         {editing ? (
           <>
-            <Label>FULL NAME</Label>
+            <Label>{t("FULL NAME")}</Label>
             <Field value={name} onChangeText={setName} />
-            <Label>PHONE NUMBER</Label>
+            <Label>{t("PHONE NUMBER")}</Label>
             <Field
               value={phone}
               onChangeText={setPhone}
@@ -250,13 +259,13 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
           <>
             <Info
               icon="mail-outline"
-              label="Email Address"
+              label={t("Email Address")}
               value={session?.user.email || ""}
             />
             <Info
               icon="call-outline"
-              label="Phone Number"
-              value={phone || "Not added"}
+              label={t("Phone Number")}
+              value={phone || t("Not added")}
             />
           </>
         )}
@@ -314,7 +323,7 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
       <Title style={styles.heading}>{t("Financial Settings")}</Title>
       <Card style={{ gap: 9 }}>
         <Label style={{ color: palette.primary }}>
-          OPENING • STARTING CAPITAL
+          {t("OPENING • STARTING CAPITAL")}
         </Label>
         {editing ? (
           <Field
@@ -325,10 +334,12 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
         ) : (
           <Title>{formatMMK(Number(capital))}</Title>
         )}
-        <Label>Changing this recalculates the current balance.</Label>
+        <Label>{t("Changing this recalculates the current balance.")}</Label>
       </Card>
       <Card style={{ gap: 9 }}>
-        <Label style={{ color: palette.success }}>MONTHLY • SPENDING CAP</Label>
+        <Label style={{ color: palette.success }}>
+          {t("MONTHLY • SPENDING CAP")}
+        </Label>
         {editing ? (
           <Field
             value={monthly}
@@ -344,10 +355,14 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
           }
           danger={Number(monthly) > 0 && monthExpense > Number(monthly)}
         />
-        <Label>ACTUAL SPENDING {formatMMK(monthExpense)}</Label>
+        <Label>
+          {t("ACTUAL SPENDING")} {formatMMK(monthExpense)}
+        </Label>
       </Card>
       <Card style={{ gap: 9 }}>
-        <Label style={{ color: palette.primary }}>YEARLY • SAVINGS GOAL</Label>
+        <Label style={{ color: palette.primary }}>
+          {t("YEARLY • SAVINGS GOAL")}
+        </Label>
         {editing ? (
           <Field
             value={yearly}
@@ -364,7 +379,9 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
               : 0
           }
         />
-        <Label>YEAR NET {formatMMK(yearNet)}</Label>
+        <Label>
+          {t("YEAR NET")} {formatMMK(yearNet)}
+        </Label>
       </Card>
       {editing ? (
         <>
@@ -416,20 +433,20 @@ function Info({
 }
 const styles = StyleSheet.create({
   page: {
-    padding: 20,
+    padding: 16,
     gap: 16,
     maxWidth: 760,
     width: "100%",
     alignSelf: "center",
     paddingBottom: 40,
   },
-  hero: { alignItems: "center", gap: 6 },
+  hero: { alignItems: "center", gap: 7, paddingVertical: 10 },
   avatarWrap: { position: "relative" },
   avatar: {
     height: 108,
     width: 108,
-    borderRadius: 54,
-    borderWidth: 4,
+    borderRadius: 34,
+    borderWidth: 5,
     borderColor: "#fff",
   },
   camera: {
@@ -438,7 +455,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 13,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
