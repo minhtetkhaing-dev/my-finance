@@ -1,4 +1,4 @@
-import { PropsWithChildren, useEffect, useRef } from "react";
+import { PropsWithChildren, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Pressable,
@@ -108,7 +108,7 @@ export function Button({
         style={[
           s.button,
           {
-            backgroundColor: secondary ? "transparent" : palette.primary,
+            backgroundColor: secondary ? palette.card : palette.primary,
             borderColor: palette.primary,
             transform: [{ scale: pressScale }],
           },
@@ -137,19 +137,37 @@ export function Field(
   props: TextInputProps & { icon?: keyof typeof Ionicons.glyphMap },
 ) {
   const { palette } = useTheme();
+  const [focused, setFocused] = useState(false);
+  const { icon, onFocus, onBlur, ...inputProps } = props;
   return (
     <View
       style={[
         s.field,
-        { backgroundColor: palette.input, borderColor: palette.border },
+        {
+          backgroundColor: focused ? palette.card : palette.input,
+          borderColor: focused ? palette.primary : palette.border,
+          borderWidth: focused ? 2 : 1,
+        },
       ]}
     >
-      {props.icon && (
-        <Ionicons name={props.icon} size={20} color={palette.muted} />
+      {icon && (
+        <Ionicons
+          name={icon}
+          size={20}
+          color={focused ? palette.primary : palette.muted}
+        />
       )}
       <TextInput
         placeholderTextColor={palette.muted}
-        {...props}
+        {...inputProps}
+        onFocus={(event) => {
+          setFocused(true);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocused(false);
+          onBlur?.(event);
+        }}
         style={[s.input, { color: palette.text }, props.style]}
       />
     </View>
@@ -208,34 +226,34 @@ export function Empty({
   );
 }
 const s = StyleSheet.create({
-  card: { borderWidth: 1, borderRadius: 24, padding: 20 },
+  card: { borderWidth: 1, borderRadius: 28, padding: 20 },
   label: {
     fontFamily: fonts.mono,
-    fontSize: 11,
+    fontSize: 10,
     lineHeight: 17,
-    letterSpacing: 0.35,
+    letterSpacing: 0.65,
   },
   title: {
     fontFamily: fonts.bold,
-    fontSize: 24,
+    fontSize: 25,
     lineHeight: 31,
-    letterSpacing: -0.45,
+    letterSpacing: -0.75,
   },
   button: {
-    height: 54,
-    borderRadius: 18,
+    height: 56,
+    borderRadius: 20,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
     gap: 9,
   },
-  buttonText: { fontFamily: fonts.semibold, fontSize: 15, letterSpacing: 0.1 },
+  buttonText: { fontFamily: fonts.semibold, fontSize: 15, letterSpacing: 0.25 },
   field: {
     minHeight: 56,
-    borderRadius: 17,
-    borderWidth: 0,
-    paddingHorizontal: 16,
+    borderRadius: 19,
+    borderWidth: 1,
+    paddingHorizontal: 17,
     alignItems: "center",
     flexDirection: "row",
     gap: 10,

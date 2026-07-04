@@ -15,6 +15,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { fonts, shadow } from "../theme";
 import { FinanceNotification } from "../lib/financeNotifications";
 import { useDeviceNotifications } from "../hooks/useDeviceNotifications";
+import { GlassSurface } from "./GlassSurface";
 
 export function Header({
   avatarUrl,
@@ -25,7 +26,7 @@ export function Header({
   notifications: FinanceNotification[];
   userId?: string;
 }) {
-  const { palette } = useTheme();
+  const { palette, isDark } = useTheme();
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [readIds, setReadIds] = useState<string[]>([]);
@@ -69,39 +70,48 @@ export function Header({
             <Ionicons name="person" size={20} color={palette.primary} />
           </View>
         )}
-        <Text
-          style={[s.title, { color: palette.primary }]}
-          numberOfLines={1}
-          adjustsFontSizeToFit
+        <View style={s.brandCopy}>
+          <Text
+            style={[s.title, { color: palette.text }]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            Clarity Finance
+          </Text>
+          <Text style={[s.tagline, { color: palette.muted }]} numberOfLines={1}>
+            {t("Money, made clear")}
+          </Text>
+        </View>
+        <GlassSurface
+          fallbackColor={palette.card}
+          tintColor={palette.primarySoft}
+          colorScheme={isDark ? "dark" : "light"}
+          clear
+          style={[s.action, { borderColor: palette.border }]}
         >
-          Clarity Finance
-        </Text>
-        <Pressable
-          onPress={() => setOpen(true)}
-          accessibilityRole="button"
-          accessibilityLabel={t("Notifications")}
-          style={({ pressed }) => [
-            s.action,
-            {
-              backgroundColor: palette.card,
-              borderColor: palette.border,
-              transform: [{ scale: pressed ? 0.94 : 1 }],
-            },
-          ]}
-        >
-          <Ionicons
-            name={unread.length ? "notifications" : "notifications-outline"}
-            size={22}
-            color={palette.primary}
-          />
-          {unread.length > 0 && (
-            <View style={[s.badge, { backgroundColor: palette.danger }]}>
-              <Text style={s.badgeText}>
-                {unread.length > 9 ? "9+" : unread.length}
-              </Text>
-            </View>
-          )}
-        </Pressable>
+          <Pressable
+            onPress={() => setOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel={t("Notifications")}
+            style={({ pressed }) => [
+              s.actionPress,
+              { transform: [{ scale: pressed ? 0.9 : 1 }] },
+            ]}
+          >
+            <Ionicons
+              name={unread.length ? "notifications" : "notifications-outline"}
+              size={22}
+              color={palette.primary}
+            />
+            {unread.length > 0 && (
+              <View style={[s.badge, { backgroundColor: palette.danger }]}>
+                <Text style={s.badgeText}>
+                  {unread.length > 9 ? "9+" : unread.length}
+                </Text>
+              </View>
+            )}
+          </Pressable>
+        </GlassSurface>
       </View>
 
       <Modal
@@ -115,8 +125,11 @@ export function Header({
             style={StyleSheet.absoluteFill}
             onPress={() => setOpen(false)}
           />
-          <View
-            style={[s.sheet, shadow, { backgroundColor: palette.background }]}
+          <GlassSurface
+            fallbackColor={palette.background}
+            tintColor={palette.primarySoft}
+            colorScheme={isDark ? "dark" : "light"}
+            style={[s.sheet, shadow]}
           >
             <View style={s.sheetHeader}>
               <View style={{ flex: 1 }}>
@@ -296,7 +309,7 @@ export function Header({
                 <Text style={s.markReadText}>{t("Mark all as read")}</Text>
               </Pressable>
             )}
-          </View>
+          </GlassSurface>
         </View>
       </Modal>
     </>
@@ -319,13 +332,26 @@ const s = StyleSheet.create({
     fontFamily: fonts.bold,
     fontSize: 21,
     letterSpacing: -0.55,
-    flex: 1,
+  },
+  brandCopy: { flex: 1 },
+  tagline: {
+    fontFamily: fonts.mono,
+    fontSize: 9,
+    letterSpacing: 0.55,
+    marginTop: -1,
   },
   action: {
     width: 42,
     height: 42,
     borderRadius: 21,
     borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  actionPress: {
+    width: "100%",
+    height: "100%",
     alignItems: "center",
     justifyContent: "center",
   },

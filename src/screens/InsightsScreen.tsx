@@ -115,10 +115,8 @@ export function InsightsScreen({ categories, transactions, profile }: Props) {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.intro}>
-        <View
-          style={[styles.introIcon, { backgroundColor: palette.primarySoft }]}
-        >
-          <Ionicons name="sparkles" size={24} color={palette.primary} />
+        <View style={[styles.introIcon, { backgroundColor: palette.ink }]}>
+          <Ionicons name="sparkles" size={24} color={palette.highlight} />
         </View>
         <View style={{ flex: 1 }}>
           <Title>{t("Financial insights")}</Title>
@@ -129,7 +127,7 @@ export function InsightsScreen({ categories, transactions, profile }: Props) {
       </View>
 
       <Card
-        style={[styles.scoreCard, { backgroundColor: palette.primarySoft }]}
+        style={[styles.scoreCard, { backgroundColor: palette.highlightSoft }]}
       >
         <View style={styles.scoreTop}>
           <View style={[styles.scoreRing, { borderColor: scoreTone }]}>
@@ -370,14 +368,14 @@ const styles = StyleSheet.create({
   },
   intro: { flexDirection: "row", alignItems: "center", gap: 12 },
   introIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
+    width: 50,
+    height: 50,
+    borderRadius: 17,
     alignItems: "center",
     justifyContent: "center",
   },
   body: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 21 },
-  scoreCard: { gap: 14, overflow: "hidden", borderRadius: 30 },
+  scoreCard: { gap: 14, overflow: "hidden", borderRadius: 32 },
   scoreTop: { flexDirection: "row", alignItems: "center", gap: 16 },
   scoreRing: {
     width: 82,
@@ -390,7 +388,7 @@ const styles = StyleSheet.create({
   score: { fontFamily: fonts.bold, fontSize: 26, lineHeight: 30 },
   metrics: { flexDirection: "row", gap: 12 },
   metricsCompact: { flexDirection: "column" },
-  metric: { flex: 1, minHeight: 138, gap: 9 },
+  metric: { flex: 1, minHeight: 142, gap: 9, borderRadius: 26 },
   metricIcon: {
     width: 38,
     height: 38,

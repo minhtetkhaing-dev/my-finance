@@ -161,7 +161,7 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
             ))}
           </View>
         </View>
-        <Card>
+        <Card style={[styles.chartCard, { borderTopColor: palette.primary }]}>
           <View style={styles.chartTop}>
             <View>
               <Label>{t("NET INCOME VS EXPENSE")}</Label>
@@ -306,6 +306,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   chartTop: { flexDirection: "row", justifyContent: "space-between" },
+  chartCard: { borderTopWidth: 5, borderRadius: 32, paddingTop: 18 },
   noData: { height: 110, alignItems: "center", justifyContent: "center" },
   labels: { flexDirection: "row", justifyContent: "space-between" },
   summary: {

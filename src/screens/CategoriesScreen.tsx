@@ -137,7 +137,13 @@ export function CategoriesScreen({
               onPress={() => setDetailId(category.id)}
             >
               {({ pressed }) => (
-                <Card style={[styles.category, pressed && { opacity: 0.75 }]}>
+                <Card
+                  style={[
+                    styles.category,
+                    { borderColor: `${category.color}55` },
+                    pressed && { opacity: 0.75 },
+                  ]}
+                >
                   <View
                     style={[
                       styles.icon,
@@ -219,24 +225,24 @@ const styles = StyleSheet.create({
   segment: { padding: 5, borderRadius: 20, flexDirection: "row" },
   segmentItem: { flex: 1, padding: 12, borderRadius: 16 },
   segmentText: { textAlign: "center", fontFamily: fonts.mono, fontSize: 16 },
-  summary: { gap: 12, borderRadius: 28 },
+  summary: { gap: 12, borderRadius: 30 },
   note: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22 },
   empty: { alignItems: "center", gap: 7 },
   category: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    minHeight: 94,
+    minHeight: 98,
   },
   icon: {
     width: 58,
     height: 58,
-    borderRadius: 19,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
   },
   categoryInfo: { flex: 1, gap: 3 },
-  name: { fontFamily: fonts.semibold, fontSize: 18 },
+  name: { fontFamily: fonts.bold, fontSize: 18, letterSpacing: -0.35 },
   value: { maxWidth: "38%", minWidth: 88, gap: 10 },
   amount: { fontFamily: fonts.regular, fontSize: 15, textAlign: "right" },
   add: {

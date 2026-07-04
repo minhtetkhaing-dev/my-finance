@@ -182,6 +182,8 @@ const my: Record<string, string> = {
     "ငွေကြေးအသိပေးချက်အသစ်များ ဤစက်တွင် ပေါ်လာပါမည်။",
   "Receive budget and savings alerts outside the app.":
     "အက်ပ်ပြင်ပတွင် ဘတ်ဂျက်နှင့် စုဆောင်းငွေ အသိပေးချက်များ ရယူပါ။",
+  "Money, made clear": "ငွေကြေးကို ရှင်းလင်းစွာ",
+  "AVAILABLE NOW": "လက်ရှိ အသုံးပြုနိုင်ငွေ",
 };
 const Context = createContext<{
   language: Language;

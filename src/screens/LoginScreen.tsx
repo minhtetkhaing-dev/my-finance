@@ -111,13 +111,11 @@ export function LoginScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.brand}>
-            <View
-              style={[styles.logo, { backgroundColor: palette.primarySoft }]}
-            >
+            <View style={[styles.logo, { backgroundColor: palette.ink }]}>
               <Ionicons
                 name="newspaper-outline"
                 size={42}
-                color={palette.primary}
+                color={palette.highlight}
               />
             </View>
             <Title style={{ fontSize: 36 }}>Clarity Finance</Title>
@@ -288,12 +286,13 @@ const styles = StyleSheet.create({
   logo: {
     height: 68,
     width: 68,
-    borderRadius: 22,
+    borderRadius: 20,
+    transform: [{ rotate: "-3deg" }],
     alignItems: "center",
     justifyContent: "center",
   },
   welcome: { fontFamily: fonts.regular, fontSize: 17 },
-  form: { gap: 15, padding: 22, borderRadius: 30 },
+  form: { gap: 15, padding: 22, borderRadius: 32 },
   tabs: { flexDirection: "row", padding: 5, borderRadius: 18 },
   tab: { flex: 1, padding: 11, borderRadius: 14 },
   tabText: { textAlign: "center", fontFamily: fonts.semibold, fontSize: 15 },

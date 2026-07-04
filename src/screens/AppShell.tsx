@@ -22,6 +22,7 @@ import { InsightsScreen } from "./InsightsScreen";
 import { CapitalOnboardingModal } from "./CapitalOnboardingModal";
 import { useLanguage } from "../contexts/LanguageContext";
 import { buildFinanceNotifications } from "../lib/financeNotifications";
+import { GlassSurface } from "../components/GlassSurface";
 
 const tabs = [
   {
@@ -171,14 +172,18 @@ function Nav({
   setTab: (value: TabKey) => void;
   vertical?: boolean;
 }) {
-  const { palette } = useTheme();
+  const { palette, isDark } = useTheme();
   const { t } = useLanguage();
   return (
-    <View
+    <GlassSurface
+      fallbackColor={palette.card}
+      tintColor={palette.primarySoft}
+      colorScheme={isDark ? "dark" : "light"}
+      interactive={!vertical}
       style={[
         s.nav,
         shadow,
-        { backgroundColor: palette.card, borderColor: palette.border },
+        { borderColor: palette.border },
         vertical && s.navVertical,
       ]}
     >
@@ -196,7 +201,7 @@ function Nav({
           />
         );
       })}
-    </View>
+    </GlassSurface>
   );
 }
 
@@ -239,7 +244,7 @@ function NavItem({
         s.navItem,
         vertical && s.navItemVertical,
         {
-          backgroundColor: active ? palette.primarySoft : "transparent",
+          backgroundColor: active ? palette.highlightSoft : "transparent",
           transform: [{ scale: pressed ? 0.92 : 1 }],
         },
       ]}
@@ -247,7 +252,7 @@ function NavItem({
       <Animated.View
         style={[
           s.iconBubble,
-          active && { backgroundColor: palette.primary },
+          active && { backgroundColor: palette.ink },
           {
             transform: [
               {
@@ -276,7 +281,7 @@ function NavItem({
         <Animated.Text
           style={[
             s.navLabel,
-            { color: active ? palette.primary : palette.muted },
+            { color: active ? palette.text : palette.muted },
             {
               opacity: selected.interpolate({
                 inputRange: [0, 1],

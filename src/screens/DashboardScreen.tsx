@@ -75,12 +75,29 @@ export function DashboardScreen({
         <Card
           style={[
             styles.balance,
-            { backgroundColor: palette.primary, borderColor: palette.primary },
+            { backgroundColor: palette.ink, borderColor: palette.ink },
           ]}
         >
-          <Label style={{ color: "#DCE1FF" }}>
-            {t("Current Balance").toUpperCase()}
-          </Label>
+          <View style={styles.balanceOrbLarge} />
+          <View
+            style={[
+              styles.balanceOrbSmall,
+              { backgroundColor: palette.highlight },
+            ]}
+          />
+          <View style={styles.balanceTop}>
+            <View>
+              <Label style={{ color: "#B9B6C8" }}>
+                {t("Current Balance").toUpperCase()}
+              </Label>
+              <Text style={styles.availableText}>{t("AVAILABLE NOW")}</Text>
+            </View>
+            <View
+              style={[styles.walletMark, { backgroundColor: palette.primary }]}
+            >
+              <Ionicons name="wallet" size={20} color="#fff" />
+            </View>
+          </View>
           <Text
             style={[styles.balanceValue, compact && styles.balanceValueCompact]}
             numberOfLines={1}
@@ -89,7 +106,7 @@ export function DashboardScreen({
             {formatMMK(balance)}
           </Text>
           <View style={styles.trend}>
-            <Ionicons name="wallet-outline" color="#fff" />
+            <Ionicons name="pulse" color={palette.highlight} />
             <Label style={{ color: "#fff" }}>
               {t("CAPITAL + INCOME − EXPENSES")}
             </Label>
@@ -214,11 +231,49 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   balance: { padding: 26, gap: 13, borderRadius: 30 },
+  balanceTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    zIndex: 2,
+  },
+  availableText: {
+    color: "#fff",
+    fontFamily: fonts.semibold,
+    fontSize: 12,
+    marginTop: 3,
+  },
+  walletMark: {
+    width: 46,
+    height: 46,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    transform: [{ rotate: "4deg" }],
+  },
+  balanceOrbLarge: {
+    position: "absolute",
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: "#5449D8",
+    right: -58,
+    top: -70,
+  },
+  balanceOrbSmall: {
+    position: "absolute",
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    right: 86,
+    bottom: -12,
+  },
   balanceValue: {
     fontFamily: fonts.bold,
     color: "#fff",
     fontSize: 39,
     letterSpacing: -1.2,
+    zIndex: 2,
   },
   balanceValueCompact: { fontSize: 32 },
   trend: {
@@ -229,14 +284,15 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,.12)",
     flexDirection: "row",
     gap: 8,
+    zIndex: 2,
   },
   stats: { flexDirection: "row", gap: 14 },
   statsCompact: { flexDirection: "column" },
-  stat: { flex: 1, gap: 9, minHeight: 145 },
+  stat: { flex: 1, gap: 9, minHeight: 150, borderRadius: 26 },
   statIcon: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
   },

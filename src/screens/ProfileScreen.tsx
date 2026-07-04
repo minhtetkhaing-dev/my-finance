@@ -191,7 +191,12 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
     );
   return (
     <ScrollView contentContainerStyle={styles.page}>
-      <View style={styles.hero}>
+      <View
+        style={[
+          styles.hero,
+          { backgroundColor: palette.primarySoft, borderColor: palette.border },
+        ]}
+      >
         <Pressable
           onPress={chooseAvatar}
           disabled={uploading}
@@ -440,7 +445,14 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     paddingBottom: 40,
   },
-  hero: { alignItems: "center", gap: 7, paddingVertical: 10 },
+  hero: {
+    alignItems: "center",
+    gap: 7,
+    paddingVertical: 24,
+    paddingHorizontal: 18,
+    borderRadius: 32,
+    borderWidth: 1,
+  },
   avatarWrap: { position: "relative" },
   avatar: {
     height: 108,
@@ -464,7 +476,7 @@ const styles = StyleSheet.create({
   avatarActions: { flexDirection: "row", gap: 18, marginTop: 4 },
   avatarAction: { fontFamily: fonts.semibold, fontSize: 13 },
   email: { fontFamily: fonts.regular, fontSize: 15 },
-  heading: { fontSize: 21, marginTop: 8 },
+  heading: { fontSize: 20, marginTop: 12, letterSpacing: -0.4 },
   preference: { flexDirection: "row", alignItems: "center", gap: 14 },
   info: {
     flexDirection: "row",
