@@ -145,23 +145,28 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
             </Text>
           </View>
           <View
-            style={[styles.toggle, { backgroundColor: palette.primarySoft }]}
+            style={[
+              styles.toggle,
+              compact && styles.toggleCompact,
+              { backgroundColor: palette.primarySoft },
+            ]}
           >
             {["Monthly", "Yearly"].map((label, index) => (
-              <Text
+              <Pressable
                 key={label}
                 onPress={() => setYearly(Boolean(index))}
                 style={[
-                  styles.toggleText,
+                  styles.toggleItem,
                   {
-                    color: palette.text,
                     backgroundColor:
                       yearly === Boolean(index) ? palette.card : "transparent",
                   },
                 ]}
               >
-                {t(label)}
-              </Text>
+                <Text style={[styles.toggleText, { color: palette.text }]}>
+                  {t(label)}
+                </Text>
+              </Pressable>
             ))}
           </View>
         </View>
@@ -315,13 +320,24 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   sub: { fontFamily: fonts.regular, fontSize: 15, marginTop: 4 },
-  toggle: { padding: 5, borderRadius: 18, flexDirection: "row" },
+  toggle: {
+    width: 240,
+    padding: 5,
+    borderRadius: 18,
+    flexDirection: "row",
+  },
+  toggleCompact: { width: "100%" },
+  toggleItem: {
+    flex: 1,
+    minHeight: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   toggleText: {
     fontFamily: fonts.semibold,
     fontSize: 13,
-    padding: 9,
-    borderRadius: 14,
-    overflow: "hidden",
+    textAlign: "center",
   },
   chartTop: { flexDirection: "row", justifyContent: "space-between" },
   chartTopCompact: { flexDirection: "column", gap: 6 },

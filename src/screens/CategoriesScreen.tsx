@@ -55,7 +55,11 @@ export function CategoriesScreen({
   const [rangePickerOpen, setRangePickerOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
-  const narrowGrid = width < 560;
+  const gridColumns = width < 560 ? 2 : 3;
+  const gridGap = 12;
+  const gridAvailableWidth = Math.min(width, 760) - 32;
+  const gridItemWidth =
+    (gridAvailableWidth - gridGap * (gridColumns - 1)) / gridColumns;
   useEffect(() => {
     AsyncStorage.getItem(categoryViewKey).then((saved) => {
       if (saved === "list" || saved === "grid") setViewMode(saved);
@@ -328,8 +332,8 @@ export function CategoriesScreen({
                     ? [
                         styles.gridPressable,
                         {
-                          flexBasis: narrowGrid ? "47%" : "31%",
-                          maxWidth: narrowGrid ? "48%" : "32%",
+                          width: gridItemWidth,
+                          maxWidth: gridItemWidth,
                         },
                       ]
                     : undefined
@@ -502,7 +506,7 @@ const styles = StyleSheet.create({
   },
   categoryCollection: { gap: 16 },
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  gridPressable: { flexGrow: 1 },
+  gridPressable: { minHeight: 220 },
   category: {
     flexDirection: "row",
     alignItems: "center",
@@ -511,8 +515,8 @@ const styles = StyleSheet.create({
   },
   categoryPressed: { opacity: 0.72, transform: [{ scale: 0.985 }] },
   gridCategory: {
-    minHeight: 210,
-    height: "100%",
+    minHeight: 220,
+    flex: 1,
     alignItems: "flex-start",
     flexDirection: "column",
     gap: 10,
