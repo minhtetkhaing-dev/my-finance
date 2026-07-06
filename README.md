@@ -32,6 +32,8 @@ npm install
 For an existing installation, also run `supabase/migrations/20260703144436_add_initial_capital.sql`. This adds required starting-capital onboarding without deleting existing data.
 Run `supabase/migrations/20260703145419_add_avatar_storage.sql` to create the public avatar bucket and secure per-user upload policies.
 Run `supabase/migrations/20260704051847_add_profile_language.sql` to persist each user's English or Myanmar language preference across devices.
+Run `supabase/migrations/20260705124053_create_notifications.sql`, followed by `supabase/migrations/20260705130956_add_push_devices_and_realtime.sql`, to enable persistent notifications, per-device push tokens, and live cross-device updates.
+Run `supabase/migrations/20260706071502_lock_initial_capital_after_first_transaction.sql`, followed by `supabase/migrations/20260706072722_add_financial_plan_history.sql`, to lock opening capital and retain monthly limits, yearly goals, and category budgets for historical reports.
 
 The SQL explicitly grants Data API access to `authenticated`, blocks `anon`, enables RLS, and limits every row to its owner.
 
@@ -92,6 +94,18 @@ npx expo export --platform web
 ```
 
 Deploy `dist/` to a static host, then add that domain to Supabase redirect URLs and Google Authorized JavaScript origins.
+
+## 7. Realtime device notifications
+
+The `send-finance-notification` Edge Function sends one account notification to every registered iOS and Android device. It is already deployed to the configured Supabase project. Apply the notification migrations, then create a fresh EAS build so the native notification configuration is included:
+
+```bash
+npx supabase link --project-ref lzoddslttfppxtkdqxry
+npx supabase db push
+npx eas-cli@latest build --platform android --profile preview
+```
+
+The link command securely prompts for the database password. Do not put that password in `.env` or Git. Android production push requires an FCM V1 service account configured in EAS; iOS push requires Apple Push Notification credentials and an Apple Developer account. Users must enable notifications on each device once. Tapping a notification opens its corresponding app page.
 
 ## Checks and project map
 

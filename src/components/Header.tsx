@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Image,
   Modal,
@@ -8,7 +8,6 @@ import {
   Text,
   View,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../contexts/ThemeContext";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -16,39 +15,37 @@ import { fonts, shadow } from "../theme";
 import { FinanceNotification } from "../lib/financeNotifications";
 import { useDeviceNotifications } from "../hooks/useDeviceNotifications";
 import { GlassSurface } from "./GlassSurface";
+import { usePersistedNotifications } from "../hooks/usePersistedNotifications";
 
 export function Header({
   avatarUrl,
-  notifications,
+  notifications: generatedNotifications,
   userId,
+  onNavigate,
 }: {
   avatarUrl?: string | null;
   notifications: FinanceNotification[];
   userId?: string;
+  onNavigate: (destination: FinanceNotification["destination"]) => void;
 }) {
   const { palette, isDark } = useTheme();
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
-  const [readIds, setReadIds] = useState<string[]>([]);
-  const storageKey = `clarity-notifications-read-${userId || "guest"}`;
-  const deviceNotifications = useDeviceNotifications(notifications, userId);
+  const { notifications, markAllRead, markRead } = usePersistedNotifications(
+    generatedNotifications,
+    userId,
+  );
+  const unread = notifications.filter((item) => !item.read);
+  const deviceNotifications = useDeviceNotifications(
+    userId,
+    unread.length,
+    onNavigate,
+  );
 
-  useEffect(() => {
-    AsyncStorage.getItem(storageKey).then((value) => {
-      if (!value) return setReadIds([]);
-      try {
-        setReadIds(JSON.parse(value));
-      } catch {
-        setReadIds([]);
-      }
-    });
-  }, [storageKey]);
-
-  const unread = notifications.filter((item) => !readIds.includes(item.id));
-  function markAllRead() {
-    const ids = notifications.map((item) => item.id);
-    setReadIds(ids);
-    AsyncStorage.setItem(storageKey, JSON.stringify(ids));
+  async function openNotification(item: (typeof notifications)[number]) {
+    await markRead(item);
+    setOpen(false);
+    onNavigate(item.destination);
   }
 
   return (
@@ -82,36 +79,47 @@ export function Header({
             {t("Money, made clear")}
           </Text>
         </View>
-        <GlassSurface
-          fallbackColor={palette.card}
-          tintColor={palette.primarySoft}
-          colorScheme={isDark ? "dark" : "light"}
-          clear
-          style={[s.action, { borderColor: palette.border }]}
-        >
-          <Pressable
-            onPress={() => setOpen(true)}
-            accessibilityRole="button"
-            accessibilityLabel={t("Notifications")}
-            style={({ pressed }) => [
-              s.actionPress,
-              { transform: [{ scale: pressed ? 0.9 : 1 }] },
-            ]}
+        <View style={s.actionWrap}>
+          <GlassSurface
+            fallbackColor={palette.card}
+            tintColor={palette.primarySoft}
+            colorScheme={isDark ? "dark" : "light"}
+            clear
+            style={[s.action, { borderColor: palette.border }]}
           >
-            <Ionicons
-              name={unread.length ? "notifications" : "notifications-outline"}
-              size={22}
-              color={palette.primary}
-            />
-            {unread.length > 0 && (
-              <View style={[s.badge, { backgroundColor: palette.danger }]}>
-                <Text style={s.badgeText}>
-                  {unread.length > 9 ? "9+" : unread.length}
-                </Text>
-              </View>
-            )}
-          </Pressable>
-        </GlassSurface>
+            <Pressable
+              onPress={() => setOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel={t("Notifications")}
+              style={({ pressed }) => [
+                s.actionPress,
+                { transform: [{ scale: pressed ? 0.9 : 1 }] },
+              ]}
+            >
+              <Ionicons
+                name={unread.length ? "notifications" : "notifications-outline"}
+                size={22}
+                color={palette.primary}
+              />
+            </Pressable>
+          </GlassSurface>
+          {unread.length > 0 && (
+            <View
+              pointerEvents="none"
+              style={[
+                s.badge,
+                {
+                  backgroundColor: palette.danger,
+                  borderColor: palette.background,
+                },
+              ]}
+            >
+              <Text style={s.badgeText}>
+                {unread.length > 9 ? "9+" : unread.length}
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
 
       <Modal
@@ -229,7 +237,7 @@ export function Header({
                 showsVerticalScrollIndicator={false}
               >
                 {notifications.map((item) => {
-                  const isUnread = !readIds.includes(item.id);
+                  const isUnread = !item.read;
                   const tone = palette[item.tone];
                   const soft =
                     item.tone === "danger"
@@ -238,8 +246,11 @@ export function Header({
                         ? palette.successSoft
                         : palette.primarySoft;
                   return (
-                    <View
+                    <Pressable
                       key={item.id}
+                      onPress={() => openNotification(item)}
+                      accessibilityRole="button"
+                      accessibilityHint={t("Opens the related page")}
                       style={[
                         s.notification,
                         {
@@ -273,7 +284,12 @@ export function Header({
                           {item.message}
                         </Text>
                       </View>
-                    </View>
+                      <Ionicons
+                        name="chevron-forward"
+                        size={18}
+                        color={palette.muted}
+                      />
+                    </Pressable>
                   );
                 })}
               </ScrollView>
@@ -323,7 +339,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 11,
-    maxWidth: 1000,
+    maxWidth: 760,
     width: "100%",
     alignSelf: "center",
   },
@@ -335,9 +351,9 @@ const s = StyleSheet.create({
   },
   brandCopy: { flex: 1 },
   tagline: {
-    fontFamily: fonts.mono,
-    fontSize: 9,
-    letterSpacing: 0.55,
+    fontFamily: fonts.regular,
+    fontSize: 10,
+    letterSpacing: 0.15,
     marginTop: -1,
   },
   action: {
@@ -347,8 +363,9 @@ const s = StyleSheet.create({
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
+    overflow: "visible",
   },
+  actionWrap: { width: 42, height: 42, overflow: "visible" },
   actionPress: {
     width: "100%",
     height: "100%",
@@ -357,16 +374,22 @@ const s = StyleSheet.create({
   },
   badge: {
     position: "absolute",
-    right: -3,
-    top: -3,
-    minWidth: 18,
-    height: 18,
+    right: -5,
+    top: -5,
+    minWidth: 22,
+    height: 22,
     paddingHorizontal: 4,
-    borderRadius: 9,
+    borderRadius: 11,
+    borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
   },
-  badgeText: { color: "#fff", fontFamily: fonts.bold, fontSize: 10 },
+  badgeText: {
+    color: "#fff",
+    fontFamily: fonts.bold,
+    fontSize: 11,
+    lineHeight: 13,
+  },
   overlay: {
     flex: 1,
     backgroundColor: "rgba(15,14,25,.68)",

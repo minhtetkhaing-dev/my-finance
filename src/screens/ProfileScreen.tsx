@@ -40,6 +40,9 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
   const [yearly, setYearly] = useState("0");
   const [editing, setEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const capitalLocked = Boolean(
+    profile?.initial_capital_locked || transactions.length > 0,
+  );
   useEffect(() => {
     setName(profile?.full_name || session?.user.user_metadata.full_name || "");
     setPhone(profile?.phone || "");
@@ -53,17 +56,18 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
     );
     if (values.some((value) => !Number.isFinite(value) || value < 0))
       return Alert.alert(t("Enter valid MMK amounts"));
+    const profileUpdates = {
+      id: session!.user.id,
+      full_name: name,
+      phone,
+      monthly_spending_cap: values[1],
+      yearly_savings_goal: values[2],
+      updated_at: new Date().toISOString(),
+      ...(!capitalLocked && { initial_capital: values[0] }),
+    };
     const { error } = await supabase
       .from("profiles")
-      .upsert({
-        id: session!.user.id,
-        full_name: name,
-        phone,
-        initial_capital: values[0],
-        monthly_spending_cap: values[1],
-        yearly_savings_goal: values[2],
-        updated_at: new Date().toISOString(),
-      })
+      .upsert(profileUpdates)
       .select()
       .single();
     if (error) return Alert.alert(t("Could not save profile"), error.message);
@@ -326,21 +330,23 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
         </View>
       </Card>
       <Title style={styles.heading}>{t("Financial Settings")}</Title>
-      <Card style={{ gap: 9 }}>
-        <Label style={{ color: palette.primary }}>
-          {t("OPENING • STARTING CAPITAL")}
-        </Label>
-        {editing ? (
-          <Field
-            value={capital}
-            onChangeText={setCapital}
-            keyboardType="numeric"
-          />
-        ) : (
-          <Title>{formatMMK(Number(capital))}</Title>
-        )}
-        <Label>{t("Changing this recalculates the current balance.")}</Label>
-      </Card>
+      {!capitalLocked && (
+        <Card style={{ gap: 9 }}>
+          <Label style={{ color: palette.primary }}>
+            {t("OPENING • STARTING CAPITAL")}
+          </Label>
+          {editing ? (
+            <Field
+              value={capital}
+              onChangeText={setCapital}
+              keyboardType="numeric"
+            />
+          ) : (
+            <Title>{formatMMK(Number(capital))}</Title>
+          )}
+          <Label>{t("Changing this recalculates the current balance.")}</Label>
+        </Card>
+      )}
       <Card style={{ gap: 9 }}>
         <Label style={{ color: palette.success }}>
           {t("MONTHLY • SPENDING CAP")}
@@ -359,6 +365,7 @@ export function ProfileScreen({ profile, transactions, refresh }: Props) {
             Number(monthly) > 0 ? (monthExpense / Number(monthly)) * 100 : 0
           }
           danger={Number(monthly) > 0 && monthExpense > Number(monthly)}
+          risk
         />
         <Label>
           {t("ACTUAL SPENDING")} {formatMMK(monthExpense)}

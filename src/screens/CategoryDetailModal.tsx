@@ -17,6 +17,7 @@ import { fonts } from "../theme";
 import { CategoryEditorModal } from "./CategoryEditorModal";
 import { TransactionModal } from "./TransactionModal";
 import { useLanguage } from "../contexts/LanguageContext";
+import { TransactionDetailModal } from "./TransactionDetailModal";
 
 export function CategoryDetailModal({
   visible,
@@ -51,7 +52,6 @@ export function CategoryDetailModal({
   }
   function editTransaction(item: Transaction) {
     setEditingTransaction(item);
-    setTransactionOpen(true);
   }
 
   return (
@@ -107,7 +107,7 @@ export function CategoryDetailModal({
                     <Label>MONTHLY BUDGET</Label>
                     <Label>{formatMMK(category.monthly_budget)}</Label>
                   </View>
-                  <Progress value={percentage} danger={percentage > 100} />
+                  <Progress value={percentage} danger={percentage > 100} risk />
                 </>
               )}
             </Card>
@@ -139,7 +139,7 @@ export function CategoryDetailModal({
               icon="add"
             />
             <Label style={{ textAlign: "center" }}>
-              TAP A TRANSACTION TO EDIT OR DELETE IT
+              {t("Tap a transaction to view its details")}
             </Label>
           </ScrollView>
         </View>
@@ -154,9 +154,16 @@ export function CategoryDetailModal({
       <TransactionModal
         visible={transactionOpen}
         categories={categories}
-        transaction={editingTransaction}
+        transaction={null}
         initialCategoryId={category.id}
         onClose={() => setTransactionOpen(false)}
+        onSaved={onSaved}
+      />
+      <TransactionDetailModal
+        visible={Boolean(editingTransaction)}
+        transaction={editingTransaction}
+        categories={categories}
+        onClose={() => setEditingTransaction(null)}
         onSaved={onSaved}
       />
     </>

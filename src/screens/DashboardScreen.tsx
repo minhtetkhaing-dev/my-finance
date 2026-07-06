@@ -16,6 +16,7 @@ import { fonts } from "../theme";
 import { TransactionModal } from "./TransactionModal";
 import { formatMMK } from "../lib/currency";
 import { useLanguage } from "../contexts/LanguageContext";
+import { TransactionDetailModal } from "./TransactionDetailModal";
 
 type Props = {
   categories: Category[];
@@ -34,6 +35,7 @@ export function DashboardScreen({
   const { t } = useLanguage();
   const { width } = useWindowDimensions();
   const compact = width < 430;
+  const stackStats = width < 350;
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
   const now = new Date();
@@ -67,11 +69,13 @@ export function DashboardScreen({
   }
   function edit(item: Transaction) {
     setEditing(item);
-    setOpen(true);
   }
   return (
     <>
-      <ScrollView contentContainerStyle={styles.page}>
+      <ScrollView
+        contentContainerStyle={styles.page}
+        showsVerticalScrollIndicator={false}
+      >
         <Card
           style={[
             styles.balance,
@@ -112,7 +116,7 @@ export function DashboardScreen({
             </Label>
           </View>
         </Card>
-        <View style={[styles.stats, compact && styles.statsCompact]}>
+        <View style={[styles.stats, stackStats && styles.statsCompact]}>
           <Card
             style={[
               styles.stat,
@@ -128,7 +132,9 @@ export function DashboardScreen({
               <Ionicons name="arrow-down" size={21} color="#fff" />
             </View>
             <Label>{t("This Month Income").toUpperCase()}</Label>
-            <Title>{formatMMK(income)}</Title>
+            <Title style={compact ? styles.statValueCompact : undefined}>
+              {formatMMK(income)}
+            </Title>
           </Card>
           <Card
             style={[
@@ -145,7 +151,9 @@ export function DashboardScreen({
               <Ionicons name="arrow-up" size={21} color="#fff" />
             </View>
             <Label>{t("This Month Expense").toUpperCase()}</Label>
-            <Title>{formatMMK(expense)}</Title>
+            <Title style={compact ? styles.statValueCompact : undefined}>
+              {formatMMK(expense)}
+            </Title>
           </Card>
         </View>
         <View style={styles.sectionTitle}>
@@ -177,7 +185,7 @@ export function DashboardScreen({
                       {formatMMK(category.monthly_budget || 0)}
                     </Label>
                   </View>
-                  <Progress value={percentage} danger={percentage > 100} />
+                  <Progress value={percentage} danger={percentage > 100} risk />
                 </View>
               );
             })
@@ -189,7 +197,7 @@ export function DashboardScreen({
         </Card>
         <View style={styles.sectionTitle}>
           <Title>{t("Recent Transactions")}</Title>
-          <Label>{t("Tap to edit").toUpperCase()}</Label>
+          <Label>{t("Tap to view").toUpperCase()}</Label>
         </View>
         <Card style={{ paddingVertical: 0 }}>
           {transactions.length ? (
@@ -215,8 +223,15 @@ export function DashboardScreen({
       <TransactionModal
         visible={open}
         categories={categories}
-        transaction={editing}
+        transaction={null}
         onClose={() => setOpen(false)}
+        onSaved={refresh}
+      />
+      <TransactionDetailModal
+        visible={Boolean(editing)}
+        transaction={editing}
+        categories={categories}
+        onClose={() => setEditing(null)}
         onSaved={refresh}
       />
     </>
@@ -226,7 +241,7 @@ const styles = StyleSheet.create({
   page: {
     padding: 16,
     gap: 16,
-    maxWidth: 1000,
+    maxWidth: 760,
     width: "100%",
     alignSelf: "center",
   },
@@ -289,6 +304,7 @@ const styles = StyleSheet.create({
   stats: { flexDirection: "row", gap: 14 },
   statsCompact: { flexDirection: "column" },
   stat: { flex: 1, gap: 9, minHeight: 150, borderRadius: 26 },
+  statValueCompact: { fontSize: 19, lineHeight: 25, letterSpacing: -0.5 },
   statIcon: {
     width: 40,
     height: 40,

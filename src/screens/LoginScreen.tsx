@@ -14,12 +14,12 @@ import { Ionicons } from "@expo/vector-icons";
 import * as QueryParams from "expo-auth-session/build/QueryParams";
 import { makeRedirectUri } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
-import * as Linking from "expo-linking";
 import { supabase } from "../lib/supabase";
 import { useTheme } from "../contexts/ThemeContext";
 import { Button, Card, Field, Label, Title } from "../components/UI";
 import { fonts } from "../theme";
 import { useLanguage } from "../contexts/LanguageContext";
+import { AmbientDecorations } from "../components/AmbientDecorations";
 
 type AuthView = "signIn" | "signUp" | "forgot";
 export function LoginScreen() {
@@ -30,13 +30,17 @@ export function LoginScreen() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
+  const webOrigin =
+    Platform.OS === "web" && typeof window !== "undefined"
+      ? window.location.origin
+      : "";
   const authRedirectUrl =
     Platform.OS === "web"
-      ? Linking.createURL("auth/callback")
+      ? `${webOrigin}/`
       : makeRedirectUri({ scheme: "clarityfinance", path: "auth/callback" });
   const resetRedirectUrl =
     Platform.OS === "web"
-      ? Linking.createURL("auth/reset")
+      ? `${webOrigin}/auth/reset`
       : makeRedirectUri({ scheme: "clarityfinance", path: "auth/reset" });
   async function submit() {
     if (view === "signUp" && password !== confirm)
@@ -74,6 +78,15 @@ export function LoginScreen() {
     );
   }
   async function google() {
+    if (Platform.OS === "web") {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: authRedirectUrl },
+      });
+      if (error) Alert.alert("Google sign-in failed", error.message);
+      return;
+    }
+
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: authRedirectUrl, skipBrowserRedirect: true },
@@ -102,6 +115,7 @@ export function LoginScreen() {
     <SafeAreaView
       style={[styles.safe, { backgroundColor: palette.background }]}
     >
+      <AmbientDecorations />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}

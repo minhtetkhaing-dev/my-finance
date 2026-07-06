@@ -14,8 +14,8 @@ import { Card, Field, Label, Title } from "../components/UI";
 import { TransactionRow } from "../components/TransactionRow";
 import { fonts } from "../theme";
 import { formatMMK } from "../lib/currency";
-import { TransactionModal } from "./TransactionModal";
 import { useLanguage } from "../contexts/LanguageContext";
+import { TransactionDetailModal } from "./TransactionDetailModal";
 
 type Props = {
   categories: Category[];
@@ -36,7 +36,7 @@ function netTotal(items: Transaction[]) {
   );
 }
 
-function chartData(items: Transaction[], yearly: boolean) {
+function chartData(items: Transaction[], yearly: boolean, width: number) {
   const count = yearly ? 12 : 6;
   const values = Array(count).fill(0);
   const labels = yearly
@@ -68,7 +68,7 @@ function chartData(items: Transaction[], yearly: boolean) {
   const max = Math.max(0, ...cumulativeValues);
   const range = max - min || 1;
   const points = cumulativeValues.map((value, index) => ({
-    x: index * (400 / (count - 1)),
+    x: index * (width / (count - 1)),
     y: 135 - ((value - min) / range) * 115,
   }));
   return {
@@ -91,6 +91,7 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
   const [query, setQuery] = useState("");
   const [yearly, setYearly] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
+  const [chartWidth, setChartWidth] = useState(400);
   const now = new Date();
   const currentStart = periodStart(now, yearly);
   const nextStart = periodStart(now, yearly, 1);
@@ -127,10 +128,13 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
     ? ((currentNet - previousNet) / Math.abs(previousNet)) * 100
     : null;
   const positive = (change ?? 0) >= 0;
-  const chart = chartData(currentTransactions, yearly);
+  const chart = chartData(currentTransactions, yearly, chartWidth);
   return (
     <>
-      <ScrollView contentContainerStyle={styles.page}>
+      <ScrollView
+        contentContainerStyle={styles.page}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={[styles.intro, compact && styles.introCompact]}>
           <View style={{ flex: 1 }}>
             <Title style={{ fontSize: compact ? 27 : 32 }}>
@@ -162,7 +166,7 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
           </View>
         </View>
         <Card style={[styles.chartCard, { borderTopColor: palette.primary }]}>
-          <View style={styles.chartTop}>
+          <View style={[styles.chartTop, compact && styles.chartTopCompact]}>
             <View>
               <Label>{t("NET INCOME VS EXPENSE")}</Label>
               <Title>{formatMMK(currentNet)}</Title>
@@ -175,7 +179,7 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
                     : positive
                       ? palette.success
                       : palette.danger,
-                textAlign: "right",
+                textAlign: compact ? "left" : "right",
               }}
             >
               {change == null
@@ -185,35 +189,45 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
           </View>
           {currentTransactions.length ? (
             <>
-              <Svg height="155" width="100%" viewBox="0 0 400 155">
-                <Line
-                  x1="0"
-                  y1="135"
-                  x2="400"
-                  y2="135"
-                  stroke={palette.border}
-                  strokeWidth="1"
-                />
-                <Path
-                  d={chart.path}
-                  fill="none"
-                  stroke={palette.primary}
-                  strokeWidth="4"
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
-                />
-                {chart.points.map((point, index) => (
-                  <Circle
-                    key={index}
-                    cx={point.x}
-                    cy={point.y}
-                    r="4"
-                    fill={palette.card}
-                    stroke={palette.primary}
-                    strokeWidth="3"
+              <View
+                style={styles.chartPlot}
+                onLayout={({ nativeEvent }) => {
+                  const measuredWidth = Math.round(nativeEvent.layout.width);
+                  if (measuredWidth > 0 && measuredWidth !== chartWidth) {
+                    setChartWidth(measuredWidth);
+                  }
+                }}
+              >
+                <Svg height={155} width={chartWidth}>
+                  <Line
+                    x1="0"
+                    y1="135"
+                    x2={chartWidth}
+                    y2="135"
+                    stroke={palette.border}
+                    strokeWidth="1"
                   />
-                ))}
-              </Svg>
+                  <Path
+                    d={chart.path}
+                    fill="none"
+                    stroke={palette.primary}
+                    strokeWidth="4"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                  />
+                  {chart.points.map((point, index) => (
+                    <Circle
+                      key={index}
+                      cx={point.x}
+                      cy={point.y}
+                      r="4"
+                      fill={palette.card}
+                      stroke={palette.primary}
+                      strokeWidth="3"
+                    />
+                  ))}
+                </Svg>
+              </View>
               <View style={styles.labels}>
                 {chart.labels.map((label) => (
                   <Label key={label}>{label}</Label>
@@ -256,7 +270,7 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
         />
         <View style={styles.sectionTitle}>
           <Title style={{ fontSize: 22 }}>{t("Activity")}</Title>
-          <Label>{t("Tap to edit").toUpperCase()}</Label>
+          <Label>{t("Tap to view").toUpperCase()}</Label>
         </View>
         <Card style={{ paddingVertical: 0 }}>
           {filtered.length ? (
@@ -272,7 +286,7 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
           )}
         </Card>
       </ScrollView>
-      <TransactionModal
+      <TransactionDetailModal
         visible={Boolean(editing)}
         categories={categories}
         transaction={editing}
@@ -286,7 +300,7 @@ const styles = StyleSheet.create({
   page: {
     padding: 16,
     gap: 18,
-    maxWidth: 1000,
+    maxWidth: 760,
     width: "100%",
     alignSelf: "center",
   },
@@ -295,18 +309,24 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-end",
   },
-  introCompact: { alignItems: "stretch", gap: 12 },
+  introCompact: {
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: 12,
+  },
   sub: { fontFamily: fonts.regular, fontSize: 15, marginTop: 4 },
   toggle: { padding: 5, borderRadius: 18, flexDirection: "row" },
   toggleText: {
-    fontFamily: fonts.mono,
-    fontSize: 12,
+    fontFamily: fonts.semibold,
+    fontSize: 13,
     padding: 9,
     borderRadius: 14,
     overflow: "hidden",
   },
   chartTop: { flexDirection: "row", justifyContent: "space-between" },
+  chartTopCompact: { flexDirection: "column", gap: 6 },
   chartCard: { borderTopWidth: 5, borderRadius: 32, paddingTop: 18 },
+  chartPlot: { width: "100%", height: 155, overflow: "hidden" },
   noData: { height: 110, alignItems: "center", justifyContent: "center" },
   labels: { flexDirection: "row", justifyContent: "space-between" },
   summary: {

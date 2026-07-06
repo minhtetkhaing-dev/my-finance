@@ -7,7 +7,13 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Category, Profile, Transaction } from "../types";
+import {
+  Category,
+  MonthlyLimitHistory,
+  Profile,
+  Transaction,
+  YearlyGoalHistory,
+} from "../types";
 import { useTheme } from "../contexts/ThemeContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Card, Label, Progress, Title } from "../components/UI";
@@ -18,6 +24,8 @@ type Props = {
   categories: Category[];
   transactions: Transaction[];
   profile: Profile | null;
+  monthlyLimitHistory: MonthlyLimitHistory[];
+  yearlyGoalHistory: YearlyGoalHistory[];
   refresh: () => Promise<void>;
   loading: boolean;
 };
@@ -28,11 +36,17 @@ function total(items: Transaction[], kind: "income" | "expense") {
     .reduce((sum, item) => sum + item.amount, 0);
 }
 
-export function InsightsScreen({ categories, transactions, profile }: Props) {
+export function InsightsScreen({
+  categories,
+  transactions,
+  profile,
+  monthlyLimitHistory,
+  yearlyGoalHistory,
+}: Props) {
   const { palette } = useTheme();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const { width } = useWindowDimensions();
-  const compact = width < 560;
+  const compact = width < 380;
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
   const previousStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -102,6 +116,35 @@ export function InsightsScreen({ categories, transactions, profile }: Props) {
     ),
   );
   const hasActivity = transactions.length > 0;
+  const reportYears = [
+    ...new Set([
+      now.getFullYear(),
+      ...transactions.map((item) => new Date(item.occurred_at).getFullYear()),
+      ...yearlyGoalHistory.map((item) => item.effective_year),
+    ]),
+  ]
+    .sort((a, b) => b - a)
+    .map((reportYear) => {
+      const yearTransactions = transactions.filter(
+        (item) => new Date(item.occurred_at).getFullYear() === reportYear,
+      );
+      const yearIncome = total(yearTransactions, "income");
+      const yearExpense = total(yearTransactions, "expense");
+      const saved = yearIncome - yearExpense;
+      const effectiveGoal = [...yearlyGoalHistory]
+        .filter((item) => item.effective_year <= reportYear)
+        .sort((a, b) => a.effective_year - b.effective_year)
+        .at(-1)?.savings_goal;
+      const reportGoal = Number(effectiveGoal ?? 0);
+      return {
+        year: reportYear,
+        income: yearIncome,
+        expense: yearExpense,
+        saved,
+        goal: reportGoal,
+        progress: reportGoal > 0 ? (Math.max(0, saved) / reportGoal) * 100 : 0,
+      };
+    });
   const scoreTone =
     healthScore >= 70
       ? palette.success
@@ -221,7 +264,11 @@ export function InsightsScreen({ categories, transactions, profile }: Props) {
             </Text>
           </View>
         </View>
-        <Progress value={pace} danger={cap > 0 && expense > expectedSpend} />
+        <Progress
+          value={pace}
+          danger={cap > 0 && expense > expectedSpend}
+          risk
+        />
         <Text style={[styles.body, { color: palette.muted }]}>
           {cap > 0
             ? t("You have spent {spent} of your {cap} monthly cap.")
@@ -286,6 +333,104 @@ export function InsightsScreen({ categories, transactions, profile }: Props) {
           }
           last
         />
+      </Card>
+
+      <Title style={styles.sectionTitle}>{t("Savings by year")}</Title>
+      <Text style={[styles.body, { color: palette.muted }]}>
+        {t(
+          "Income minus expenses, compared with the goal recorded for each year.",
+        )}
+      </Text>
+      {reportYears.map((item) => (
+        <Card key={item.year} style={styles.yearCard}>
+          <View style={styles.sectionTop}>
+            <View>
+              <Label>{item.year}</Label>
+              <Title
+                style={{
+                  color: item.saved >= 0 ? palette.success : palette.danger,
+                }}
+              >
+                {formatMMK(item.saved)}
+              </Title>
+            </View>
+            <View
+              style={[
+                styles.badge,
+                {
+                  backgroundColor:
+                    item.goal > 0 && item.saved >= item.goal
+                      ? palette.successSoft
+                      : palette.primarySoft,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.badgeText,
+                  {
+                    color:
+                      item.goal > 0 && item.saved >= item.goal
+                        ? palette.success
+                        : palette.primary,
+                  },
+                ]}
+              >
+                {item.goal > 0
+                  ? `${Math.round(item.progress)}% ${t("OF GOAL")}`
+                  : t("NO GOAL RECORDED")}
+              </Text>
+            </View>
+          </View>
+          <Progress value={item.progress} danger={item.saved < 0} />
+          <View style={styles.yearBreakdown}>
+            <View style={styles.yearMetric}>
+              <Label>{t("INCOME")}</Label>
+              <Text style={[styles.yearValue, { color: palette.success }]}>
+                {formatMMK(item.income)}
+              </Text>
+            </View>
+            <View style={styles.yearMetric}>
+              <Label>{t("EXPENSES")}</Label>
+              <Text style={[styles.yearValue, { color: palette.danger }]}>
+                {formatMMK(item.expense)}
+              </Text>
+            </View>
+            <View style={styles.yearMetric}>
+              <Label>{t("GOAL")}</Label>
+              <Text style={[styles.yearValue, { color: palette.text }]}>
+                {formatMMK(item.goal)}
+              </Text>
+            </View>
+          </View>
+        </Card>
+      ))}
+
+      <Title style={styles.sectionTitle}>{t("Monthly limit history")}</Title>
+      <Card style={styles.listCard}>
+        {monthlyLimitHistory.length ? (
+          monthlyLimitHistory
+            .slice(0, 12)
+            .map((item, index, visible) => (
+              <InsightRow
+                key={item.id}
+                icon="calendar-outline"
+                color={palette.primary}
+                title={new Date(
+                  `${item.effective_month}T00:00:00`,
+                ).toLocaleDateString(language === "my" ? "my-MM" : "en-US", {
+                  month: "long",
+                  year: "numeric",
+                })}
+                value={formatMMK(item.spending_limit)}
+                last={index === visible.length - 1}
+              />
+            ))
+        ) : (
+          <View style={styles.emptyHistory}>
+            <Label>{t("NO LIMIT HISTORY RECORDED")}</Label>
+          </View>
+        )}
       </Card>
     </ScrollView>
   );
@@ -362,7 +507,7 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 36,
     gap: 16,
-    maxWidth: 1000,
+    maxWidth: 760,
     width: "100%",
     alignSelf: "center",
   },
@@ -398,6 +543,15 @@ const styles = StyleSheet.create({
   },
   metricValue: { fontFamily: fonts.bold, fontSize: 20, lineHeight: 26 },
   cardGap: { gap: 14 },
+  yearCard: { gap: 13 },
+  yearBreakdown: { flexDirection: "row", gap: 8 },
+  yearMetric: { flex: 1, gap: 3 },
+  yearValue: { fontFamily: fonts.semibold, fontSize: 13 },
+  emptyHistory: {
+    minHeight: 82,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   sectionTop: {
     flexDirection: "row",
     justifyContent: "space-between",

@@ -1,6 +1,7 @@
 import { PropsWithChildren, useEffect, useRef, useState } from "react";
 import {
   Animated,
+  Easing,
   Pressable,
   StyleSheet,
   Text,
@@ -176,22 +177,26 @@ export function Field(
 export function Progress({
   value,
   danger,
+  risk,
 }: {
   value: number;
   danger?: boolean;
+  risk?: boolean;
 }) {
   const { palette } = useTheme();
   const progress = useRef(new Animated.Value(0)).current;
-  const normalized = Math.min(100, Math.max(2, value));
+  const normalized = Math.min(100, Math.max(0, value));
   useEffect(() => {
+    progress.stopAnimation();
     Animated.timing(progress, {
       toValue: normalized,
-      duration: 550,
+      duration: 750,
+      easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
   }, [normalized, progress]);
   return (
-    <View style={[s.track, { backgroundColor: palette.primarySoft }]}>
+    <View style={[s.track, { backgroundColor: palette.input }]}>
       <Animated.View
         style={[
           s.fill,
@@ -200,7 +205,20 @@ export function Progress({
               inputRange: [0, 100],
               outputRange: ["0%", "100%"],
             }),
-            backgroundColor: danger ? palette.danger : palette.success,
+            backgroundColor: danger
+              ? palette.danger
+              : risk
+                ? progress.interpolate({
+                    inputRange: [0, 40, 65, 85, 100],
+                    outputRange: [
+                      palette.success,
+                      palette.success,
+                      "#FACC15",
+                      "#F97316",
+                      palette.danger,
+                    ],
+                  })
+                : palette.success,
           },
         ]}
       />
@@ -226,12 +244,12 @@ export function Empty({
   );
 }
 const s = StyleSheet.create({
-  card: { borderWidth: 1, borderRadius: 28, padding: 20 },
+  card: { borderWidth: 1, borderRadius: 22, padding: 17 },
   label: {
-    fontFamily: fonts.mono,
-    fontSize: 10,
+    fontFamily: fonts.semibold,
+    fontSize: 11,
     lineHeight: 17,
-    letterSpacing: 0.65,
+    letterSpacing: 0.35,
   },
   title: {
     fontFamily: fonts.bold,
@@ -241,7 +259,7 @@ const s = StyleSheet.create({
   },
   button: {
     height: 56,
-    borderRadius: 20,
+    borderRadius: 17,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -251,7 +269,7 @@ const s = StyleSheet.create({
   buttonText: { fontFamily: fonts.semibold, fontSize: 15, letterSpacing: 0.25 },
   field: {
     minHeight: 56,
-    borderRadius: 19,
+    borderRadius: 16,
     borderWidth: 1,
     paddingHorizontal: 17,
     alignItems: "center",

@@ -23,6 +23,7 @@ import { CapitalOnboardingModal } from "./CapitalOnboardingModal";
 import { useLanguage } from "../contexts/LanguageContext";
 import { buildFinanceNotifications } from "../lib/financeNotifications";
 import { GlassSurface } from "../components/GlassSurface";
+import { AmbientDecorations } from "../components/AmbientDecorations";
 
 const tabs = [
   {
@@ -57,8 +58,6 @@ export function AppShell() {
   const { palette } = useTheme();
   const data = useFinanceData();
   const { setLanguage, t } = useLanguage();
-  const { width } = useWindowDimensions();
-  const wide = width > 820;
   const transition = useRef(new Animated.Value(1)).current;
   const direction = useRef(1);
   const notifications = buildFinanceNotifications(
@@ -109,13 +108,14 @@ export function AppShell() {
     );
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: palette.background }]}>
-      <View style={[s.shell, wide && s.wide]}>
-        {wide && <Nav tab={tab} setTab={changeTab} vertical />}
+      <AmbientDecorations />
+      <View style={s.shell}>
         <View style={s.main}>
           <Header
             avatarUrl={data.profile?.avatar_url}
             notifications={notifications}
             userId={data.profile?.id}
+            onNavigate={changeTab}
           />
           {data.error && (
             <Text
@@ -152,7 +152,7 @@ export function AppShell() {
             {page}
           </Animated.View>
         </View>
-        {!wide && <Nav tab={tab} setTab={changeTab} />}
+        <Nav tab={tab} setTab={changeTab} />
       </View>
       <CapitalOnboardingModal
         visible={
@@ -174,19 +174,72 @@ function Nav({
 }) {
   const { palette, isDark } = useTheme();
   const { t } = useLanguage();
+  const { width: viewportWidth } = useWindowDimensions();
+  const activeIndex = tabs.findIndex((item) => item.key === tab);
+  const indicator = useRef(new Animated.Value(activeIndex)).current;
+  const [navWidth, setNavWidth] = useState(0);
+  const horizontalPadding = 8;
+  const tabWidth = navWidth
+    ? (navWidth - horizontalPadding * 2) / tabs.length
+    : 0;
+
+  useEffect(() => {
+    if (vertical) return;
+    Animated.spring(indicator, {
+      toValue: activeIndex,
+      useNativeDriver: true,
+      damping: 18,
+      stiffness: 190,
+      mass: 0.72,
+    }).start();
+  }, [activeIndex, indicator, vertical]);
+
   return (
     <GlassSurface
       fallbackColor={palette.card}
-      tintColor={palette.primarySoft}
+      tintColor={isDark ? "#17171CDD" : "#FFFFFFB8"}
       colorScheme={isDark ? "dark" : "light"}
       interactive={!vertical}
+      clear={!vertical}
+      onLayout={({ nativeEvent }) => setNavWidth(nativeEvent.layout.width)}
       style={[
         s.nav,
         shadow,
-        { borderColor: palette.border },
+        {
+          borderColor: palette.border,
+          width: Math.min(560, viewportWidth - 24),
+        },
         vertical && s.navVertical,
       ]}
     >
+      {!vertical && tabWidth > 0 && (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            s.liquidIndicator,
+            {
+              left: horizontalPadding,
+              width: tabWidth,
+              transform: [
+                {
+                  translateX: indicator.interpolate({
+                    inputRange: [0, tabs.length - 1],
+                    outputRange: [0, tabWidth * (tabs.length - 1)],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <GlassSurface
+            fallbackColor={palette.primarySoft}
+            tintColor={isDark ? "#A9A3FF40" : "#635BFF24"}
+            colorScheme={isDark ? "dark" : "light"}
+            clear
+            style={[s.liquidLens, { borderColor: `${palette.primary}45` }]}
+          />
+        </Animated.View>
+      )}
       {tabs.map((item) => {
         const active = tab === item.key;
         return (
@@ -197,6 +250,7 @@ function Nav({
             activeIcon={item.active}
             label={t(item.label)}
             vertical={vertical}
+            liquid={!vertical}
             onPress={() => setTab(item.key)}
           />
         );
@@ -211,6 +265,7 @@ function NavItem({
   activeIcon,
   label,
   vertical,
+  liquid,
   onPress,
 }: {
   active: boolean;
@@ -218,6 +273,7 @@ function NavItem({
   activeIcon: keyof typeof Ionicons.glyphMap;
   label: string;
   vertical?: boolean;
+  liquid?: boolean;
   onPress: () => void;
 }) {
   const { palette } = useTheme();
@@ -244,7 +300,8 @@ function NavItem({
         s.navItem,
         vertical && s.navItemVertical,
         {
-          backgroundColor: active ? palette.highlightSoft : "transparent",
+          backgroundColor:
+            active && vertical ? palette.highlightSoft : "transparent",
           transform: [{ scale: pressed ? 0.92 : 1 }],
         },
       ]}
@@ -252,7 +309,7 @@ function NavItem({
       <Animated.View
         style={[
           s.iconBubble,
-          active && { backgroundColor: palette.ink },
+          active && vertical && { backgroundColor: palette.ink },
           {
             transform: [
               {
@@ -273,9 +330,12 @@ function NavItem({
       >
         <Ionicons
           name={active ? activeIcon : icon}
-          size={23}
-          color={active ? "#fff" : palette.muted}
+          size={liquid && active ? 24 : 23}
+          color={active ? (vertical ? "#fff" : palette.primary) : palette.muted}
         />
+        {liquid && active && (
+          <View style={[s.activeDot, { backgroundColor: palette.primary }]} />
+        )}
       </Animated.View>
       {vertical && (
         <Animated.Text
@@ -299,7 +359,6 @@ function NavItem({
 const s = StyleSheet.create({
   safe: { flex: 1, height: "100%" },
   shell: { flex: 1, overflow: "hidden" },
-  wide: { flexDirection: "row" },
   main: { flex: 1, overflow: "hidden" },
   screen: { flex: 1, overflow: "hidden" },
   error: {
@@ -310,7 +369,7 @@ const s = StyleSheet.create({
     borderRadius: 12,
   },
   nav: {
-    height: Platform.OS === "ios" ? 76 : 66,
+    height: Platform.OS === "ios" ? 78 : 70,
     borderWidth: 1,
     flexDirection: "row",
     paddingHorizontal: 8,
@@ -318,9 +377,23 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-around",
     zIndex: 10,
-    marginHorizontal: 12,
+    marginHorizontal: 0,
     marginBottom: Platform.OS === "ios" ? 7 : 10,
-    borderRadius: 26,
+    borderRadius: 30,
+    overflow: "hidden",
+    maxWidth: 560,
+    alignSelf: "center",
+  },
+  liquidIndicator: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 8 : 7,
+    height: 54,
+    paddingHorizontal: 3,
+  },
+  liquidLens: {
+    flex: 1,
+    borderRadius: 22,
+    borderWidth: StyleSheet.hairlineWidth,
     overflow: "hidden",
   },
   navVertical: {
@@ -345,6 +418,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
+    zIndex: 1,
   },
   navItemVertical: {
     width: "100%",
@@ -360,6 +434,13 @@ const s = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
+  },
+  activeDot: {
+    position: "absolute",
+    bottom: 2,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
   },
   navLabel: { fontFamily: fonts.semibold, fontSize: 14 },
 });

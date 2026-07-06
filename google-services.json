@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "503769746749",
+    "project_id": "clarity-finance-5a7ca",
+    "storage_bucket": "clarity-finance-5a7ca.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:503769746749:android:ad1aebc57cb94cb6664954",
+        "android_client_info": {
+          "package_name": "com.minhtetkhaing.clarityfinance"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDL9xL1TWZ8dUC3PEw-kNW7WkeggMJMvZA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

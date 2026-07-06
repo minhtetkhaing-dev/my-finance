@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import type { Session } from "@supabase/supabase-js";
+import { Platform } from "react-native";
 import * as Linking from "expo-linking";
 import * as QueryParams from "expo-auth-session/build/QueryParams";
 import { supabase } from "../lib/supabase";
@@ -25,6 +26,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
     async function handleUrl(url: string | null) {
       if (!url) return;
       if (url.includes("auth/reset")) setRecovery(true);
+      // supabase-js detects and exchanges PKCE callback codes automatically
+      // in browsers. Manual exchange is only needed for native deep links.
+      if (Platform.OS === "web") return;
       const { params, errorCode } = QueryParams.getQueryParams(url);
       if (errorCode) return;
       if (params.code) await supabase.auth.exchangeCodeForSession(params.code);

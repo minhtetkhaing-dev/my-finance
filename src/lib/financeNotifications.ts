@@ -7,6 +7,7 @@ export type FinanceNotification = {
   message: string;
   icon: "warning" | "trophy" | "pie-chart" | "pricetag";
   tone: "danger" | "success" | "primary";
+  destination: "dashboard" | "history" | "categories" | "insights" | "profile";
 };
 
 export function buildFinanceNotifications(
@@ -39,6 +40,7 @@ export function buildFinanceNotifications(
         .replace("{limit}", formatMMK(cap)),
       icon: "warning",
       tone: "danger",
+      destination: "insights",
     });
   } else if (cap > 0 && monthlyExpense >= cap * 0.8) {
     notifications.push({
@@ -50,6 +52,7 @@ export function buildFinanceNotifications(
       ),
       icon: "pie-chart",
       tone: "primary",
+      destination: "insights",
     });
   }
 
@@ -74,6 +77,7 @@ export function buildFinanceNotifications(
             .replace("{amount}", formatMMK(spent - budget)),
           icon: "warning",
           tone: "danger",
+          destination: "categories",
         });
       }
     });
@@ -96,13 +100,14 @@ export function buildFinanceNotifications(
       ),
       icon: "trophy",
       tone: "success",
+      destination: "insights",
     });
   }
 
   const uncategorized = transactions.filter((item) => !item.category_id).length;
   if (uncategorized > 0) {
     notifications.push({
-      id: `uncategorized-${uncategorized}`,
+      id: `uncategorized-${period}`,
       title: t("Transactions need attention"),
       message: t("{count} transactions have no category.").replace(
         "{count}",
@@ -110,6 +115,7 @@ export function buildFinanceNotifications(
       ),
       icon: "pricetag",
       tone: "primary",
+      destination: "history",
     });
   }
 

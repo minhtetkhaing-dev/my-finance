@@ -5,6 +5,7 @@ import {
   StyleProp,
   View,
   ViewStyle,
+  ViewProps,
 } from "react-native";
 import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
 
@@ -15,6 +16,7 @@ type Props = PropsWithChildren<{
   colorScheme?: "auto" | "light" | "dark";
   interactive?: boolean;
   clear?: boolean;
+  onLayout?: ViewProps["onLayout"];
 }>;
 
 export function GlassSurface({
@@ -25,6 +27,7 @@ export function GlassSurface({
   colorScheme = "auto",
   interactive,
   clear,
+  onLayout,
 }: Props) {
   const [reduceTransparency, setReduceTransparency] = useState(false);
 
@@ -49,7 +52,10 @@ export function GlassSurface({
 
   if (!available) {
     return (
-      <View style={[style, { backgroundColor: fallbackColor }]}>
+      <View
+        onLayout={onLayout}
+        style={[style, { backgroundColor: fallbackColor }]}
+      >
         {children}
       </View>
     );
@@ -62,6 +68,7 @@ export function GlassSurface({
       tintColor={tintColor}
       colorScheme={colorScheme}
       isInteractive={interactive}
+      onLayout={onLayout}
     >
       {children}
     </GlassView>
