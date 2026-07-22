@@ -34,6 +34,7 @@ Run `supabase/migrations/20260703145419_add_avatar_storage.sql` to create the pu
 Run `supabase/migrations/20260704051847_add_profile_language.sql` to persist each user's English or Myanmar language preference across devices.
 Run `supabase/migrations/20260705124053_create_notifications.sql`, followed by `supabase/migrations/20260705130956_add_push_devices_and_realtime.sql`, to enable persistent notifications, per-device push tokens, and live cross-device updates.
 Run `supabase/migrations/20260706071502_lock_initial_capital_after_first_transaction.sql`, followed by `supabase/migrations/20260706072722_add_financial_plan_history.sql`, to lock opening capital and retain monthly limits, yearly goals, and category budgets for historical reports.
+Run `supabase/migrations/20260721094500_backfill_planning_history_gaps.sql` to backfill unchanged months/years when users later change monthly spending caps, yearly savings goals, or category budgets.
 
 The SQL explicitly grants Data API access to `authenticated`, blocks `anon`, enables RLS, and limits every row to its owner.
 

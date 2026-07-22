@@ -62,7 +62,7 @@ export function useDeviceNotifications(
           description: "Budget limits, savings goals, and transaction alerts",
           importance: Notifications.AndroidImportance.HIGH,
           vibrationPattern: [0, 250, 180, 250],
-          lightColor: "#5B50E6",
+          lightColor: "#5338D6",
           sound: "default",
         });
       }

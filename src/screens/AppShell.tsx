@@ -233,7 +233,7 @@ function Nav({
         >
           <GlassSurface
             fallbackColor={palette.primarySoft}
-            tintColor={isDark ? "#A9A3FF40" : "#635BFF24"}
+            tintColor={`${palette.primary}${isDark ? "38" : "24"}`}
             colorScheme={isDark ? "dark" : "light"}
             clear
             style={[s.liquidLens, { borderColor: `${palette.primary}45` }]}

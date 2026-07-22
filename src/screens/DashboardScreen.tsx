@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -8,7 +8,13 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Category, Profile, Transaction } from "../types";
+import Svg, { Circle, G } from "react-native-svg";
+import {
+  Category,
+  CategoryBudgetHistory,
+  Profile,
+  Transaction,
+} from "../types";
 import { useTheme } from "../contexts/ThemeContext";
 import { Card, Label, Progress, Title } from "../components/UI";
 import { TransactionRow } from "../components/TransactionRow";
@@ -17,11 +23,16 @@ import { TransactionModal } from "./TransactionModal";
 import { formatMMK } from "../lib/currency";
 import { useLanguage } from "../contexts/LanguageContext";
 import { TransactionDetailModal } from "./TransactionDetailModal";
+import {
+  effectiveCategoryBudgetForMonth,
+  monthStart,
+} from "../lib/planningHistory";
 
 type Props = {
   categories: Category[];
   transactions: Transaction[];
   profile: Profile | null;
+  categoryBudgetHistory: CategoryBudgetHistory[];
   refresh: () => Promise<void>;
   loading: boolean;
 };
@@ -29,6 +40,7 @@ export function DashboardScreen({
   categories,
   transactions,
   profile,
+  categoryBudgetHistory,
   refresh,
 }: Props) {
   const { palette } = useTheme();
@@ -36,9 +48,11 @@ export function DashboardScreen({
   const { width } = useWindowDimensions();
   const compact = width < 430;
   const stackStats = width < 350;
+  const chartSize = compact ? 150 : 176;
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
   const now = new Date();
+  const currentMonth = monthStart(now);
   const monthTransactions = transactions.filter((item) => {
     const date = new Date(item.occurred_at);
     return (
@@ -61,8 +75,76 @@ export function DashboardScreen({
   const balance =
     Number(profile?.initial_capital ?? 0) + allIncome - allExpense;
   const budgets = categories
-    .filter((item) => item.kind === "expense" && item.monthly_budget)
+    .filter(
+      (item) =>
+        item.kind === "expense" &&
+        effectiveCategoryBudgetForMonth(
+          categoryBudgetHistory,
+          item,
+          currentMonth,
+        ) > 0,
+    )
     .slice(0, 3);
+  const categoryBreakdown = useMemo(() => {
+    const categoryMap = new Map(categories.map((item) => [item.id, item]));
+    const totals = new Map<
+      string,
+      {
+        id: string;
+        name: string;
+        color: string;
+        icon: keyof typeof Ionicons.glyphMap;
+        amount: number;
+      }
+    >();
+
+    monthTransactions
+      .filter((item) => item.kind === "expense")
+      .forEach((item) => {
+        const category = item.category_id
+          ? categoryMap.get(item.category_id)
+          : undefined;
+        const id = category?.id ?? "uncategorized";
+        const current = totals.get(id) ?? {
+          id,
+          name: category?.name ?? t("Uncategorized"),
+          color: category?.color ?? palette.muted,
+          icon:
+            (category?.icon as keyof typeof Ionicons.glyphMap | undefined) ??
+            "card-outline",
+          amount: 0,
+        };
+        current.amount += Number(item.amount) || 0;
+        totals.set(id, current);
+      });
+
+    const sorted = [...totals.values()]
+      .filter((item) => item.amount > 0)
+      .sort((a, b) => b.amount - a.amount);
+    const visible = sorted.slice(0, 5);
+    const hidden = sorted.slice(5);
+    const otherAmount = hidden.reduce((sum, item) => sum + item.amount, 0);
+    const rows =
+      otherAmount > 0
+        ? [
+            ...visible,
+            {
+              id: "other",
+              name: t("Other"),
+              color: palette.highlight,
+              icon: "ellipsis-horizontal",
+              amount: otherAmount,
+            },
+          ]
+        : visible;
+    const total = rows.reduce((sum, item) => sum + item.amount, 0);
+
+    return rows.map((item) => ({
+      ...item,
+      percentage: total > 0 ? (item.amount / total) * 100 : 0,
+    }));
+  }, [categories, monthTransactions, palette.highlight, palette.muted, t]);
+  const topCategory = categoryBreakdown[0];
   function add() {
     setEditing(null);
     setOpen(true);
@@ -157,6 +239,95 @@ export function DashboardScreen({
           </Card>
         </View>
         <View style={styles.sectionTitle}>
+          <Title>{t("Category Breakdown")}</Title>
+          <Label>{t("THIS MONTH")}</Label>
+        </View>
+        <Card style={[styles.donutCard, compact && styles.donutCardCompact]}>
+          {categoryBreakdown.length ? (
+            <>
+              <View
+                style={[
+                  styles.donutWrap,
+                  { width: chartSize, height: chartSize },
+                ]}
+              >
+                <CategoryDonut
+                  data={categoryBreakdown}
+                  palette={palette}
+                  size={chartSize}
+                />
+                <View style={styles.donutCenter}>
+                  <Label style={{ textAlign: "center" }}>
+                    {t("TOTAL SPENT")}
+                  </Label>
+                  <Text
+                    style={[
+                      styles.donutAmount,
+                      { color: palette.text },
+                      compact && styles.donutAmountCompact,
+                    ]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                  >
+                    {formatMMK(expense)}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.donutInfo}>
+                <Label>{t("TOP CATEGORY")}</Label>
+                <View style={styles.topCategoryRow}>
+                  <View
+                    style={[
+                      styles.topCategoryIcon,
+                      { backgroundColor: `${topCategory.color}22` },
+                    ]}
+                  >
+                    <Ionicons
+                      name={topCategory.icon as keyof typeof Ionicons.glyphMap}
+                      size={18}
+                      color={topCategory.color}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={[styles.topCategoryName, { color: palette.text }]}
+                      numberOfLines={1}
+                    >
+                      {topCategory.name}
+                    </Text>
+                    <Label>
+                      {Math.round(topCategory.percentage)}% {t("of spending")}
+                    </Label>
+                  </View>
+                </View>
+                <View style={styles.legend}>
+                  {categoryBreakdown.map((item) => (
+                    <View key={item.id} style={styles.legendItem}>
+                      <View
+                        style={[
+                          styles.legendDot,
+                          { backgroundColor: item.color },
+                        ]}
+                      />
+                      <Text
+                        style={[styles.legendText, { color: palette.text }]}
+                        numberOfLines={1}
+                      >
+                        {item.name}
+                      </Text>
+                      <Label>{Math.round(item.percentage)}%</Label>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </>
+          ) : (
+            <View style={styles.empty}>
+              <Label>{t("NO CATEGORY SPENDING YET")}</Label>
+            </View>
+          )}
+        </Card>
+        <View style={styles.sectionTitle}>
           <Title>{t("Budget vs Actual")}</Title>
           <Label>{t("THIS MONTH")}</Label>
         </View>
@@ -169,7 +340,12 @@ export function DashboardScreen({
                     item.category_id === category.id && item.kind === "expense",
                 )
                 .reduce((sum, item) => sum + item.amount, 0);
-              const percentage = (spent / (category.monthly_budget || 1)) * 100;
+              const budget = effectiveCategoryBudgetForMonth(
+                categoryBudgetHistory,
+                category,
+                currentMonth,
+              );
+              const percentage = (spent / (budget || 1)) * 100;
               return (
                 <View key={category.id} style={styles.budget}>
                   <View style={styles.budgetTop}>
@@ -182,7 +358,7 @@ export function DashboardScreen({
                       }}
                     >
                       {formatMMK(spent)} /{" "}
-                      {formatMMK(category.monthly_budget || 0)}
+                      {formatMMK(budget)}
                     </Label>
                   </View>
                   <Progress value={percentage} danger={percentage > 100} risk />
@@ -237,6 +413,56 @@ export function DashboardScreen({
     </>
   );
 }
+
+function CategoryDonut({
+  data,
+  palette,
+  size,
+}: {
+  data: { id: string; color: string; percentage: number }[];
+  palette: ReturnType<typeof useTheme>["palette"];
+  size: number;
+}) {
+  const strokeWidth = size < 170 ? 22 : 25;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  let offset = 0;
+
+  return (
+    <Svg width={size} height={size}>
+      <Circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        stroke={palette.input}
+        strokeWidth={strokeWidth}
+        fill="transparent"
+      />
+      <G rotation="-90" originX={size / 2} originY={size / 2}>
+        {data.map((item) => {
+          const dash = (item.percentage / 100) * circumference;
+          const segment = (
+            <Circle
+              key={item.id}
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke={item.color}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${dash} ${circumference - dash}`}
+              strokeDashoffset={-offset}
+              strokeLinecap="round"
+              fill="transparent"
+            />
+          );
+          offset += dash;
+          return segment;
+        })}
+      </G>
+    </Svg>
+  );
+}
+
 const styles = StyleSheet.create({
   page: {
     padding: 16,
@@ -271,7 +497,7 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     borderRadius: 75,
-    backgroundColor: "#5449D8",
+    backgroundColor: "#6D28D9",
     right: -58,
     top: -70,
   },
@@ -321,6 +547,76 @@ const styles = StyleSheet.create({
   budget: { gap: 8, marginVertical: 10 },
   budgetTop: { flexDirection: "row", justifyContent: "space-between" },
   itemName: { fontFamily: fonts.regular, fontSize: 15 },
+  donutCard: {
+    borderRadius: 30,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 20,
+  },
+  donutCardCompact: {
+    flexDirection: "column",
+    alignItems: "stretch",
+  },
+  donutWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+  },
+  donutCenter: {
+    position: "absolute",
+    left: 22,
+    right: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  donutAmount: {
+    fontSize: 19,
+    lineHeight: 25,
+    letterSpacing: -0.7,
+    textAlign: "center",
+  },
+  donutAmountCompact: {
+    fontSize: 17,
+  },
+  donutInfo: {
+    flex: 1,
+    gap: 12,
+    minWidth: 0,
+  },
+  topCategoryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  topCategoryIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  topCategoryName: {
+    fontFamily: fonts.bold,
+    fontSize: 18,
+  },
+  legend: {
+    gap: 8,
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  legendText: {
+    flex: 1,
+    fontFamily: fonts.semibold,
+    fontSize: 13,
+  },
   empty: { height: 90, alignItems: "center", justifyContent: "center" },
   fab: {
     position: "absolute",

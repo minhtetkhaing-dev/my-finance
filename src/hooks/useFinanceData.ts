@@ -109,6 +109,21 @@ export function useFinanceData() {
         { event: "*", schema: "public", table: "profiles" },
         refreshSoon,
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "monthly_limit_history" },
+        refreshSoon,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "yearly_goal_history" },
+        refreshSoon,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "category_budget_history" },
+        refreshSoon,
+      )
       .subscribe();
     return () => {
       if (refreshTimer.current) clearTimeout(refreshTimer.current);

@@ -24,6 +24,9 @@ export function CategoryDetailModal({
   category,
   categories,
   transactions,
+  rangeStart,
+  rangeEnd,
+  periodBudget,
   onClose,
   onSaved,
 }: {
@@ -31,6 +34,9 @@ export function CategoryDetailModal({
   category: Category | null;
   categories: Category[];
   transactions: Transaction[];
+  rangeStart?: Date;
+  rangeEnd?: Date;
+  periodBudget?: number;
   onClose: () => void;
   onSaved: () => Promise<void>;
 }) {
@@ -43,9 +49,23 @@ export function CategoryDetailModal({
   if (!category) return null;
   const items = transactions.filter((item) => item.category_id === category.id);
   const total = items.reduce((sum, item) => sum + item.amount, 0);
-  const percentage = category.monthly_budget
-    ? (total / category.monthly_budget) * 100
-    : 0;
+  const budget = Number(periodBudget ?? category.monthly_budget ?? 0);
+  const percentage = budget ? (total / budget) * 100 : 0;
+  const periodLabel =
+    rangeStart && rangeEnd
+      ? rangeStart.getTime() === rangeEnd.getTime()
+        ? rangeStart.toLocaleDateString(undefined, {
+            month: "long",
+            year: "numeric",
+          })
+        : `${rangeStart.toLocaleDateString(undefined, {
+            month: "short",
+            year: "numeric",
+          })} – ${rangeEnd.toLocaleDateString(undefined, {
+            month: "short",
+            year: "numeric",
+          })}`
+      : null;
   function addTransaction() {
     setEditingTransaction(null);
     setTransactionOpen(true);
@@ -99,13 +119,19 @@ export function CategoryDetailModal({
                   color={category.color}
                 />
               </View>
-              <Label>TOTAL {category.kind.toUpperCase()}</Label>
+              <Label>
+                {periodLabel
+                  ? `${periodLabel.toUpperCase()} ${category.kind.toUpperCase()}`
+                  : `TOTAL ${category.kind.toUpperCase()}`}
+              </Label>
               <Title>{formatMMK(total)}</Title>
-              {category.monthly_budget != null && (
+              {budget > 0 && (
                 <>
                   <View style={styles.budgetLine}>
-                    <Label>MONTHLY BUDGET</Label>
-                    <Label>{formatMMK(category.monthly_budget)}</Label>
+                    <Label>
+                      {periodLabel ? "PERIOD BUDGET" : "MONTHLY BUDGET"}
+                    </Label>
+                    <Label>{formatMMK(budget)}</Label>
                   </View>
                   <Progress value={percentage} danger={percentage > 100} risk />
                 </>

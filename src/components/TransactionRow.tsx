@@ -7,26 +7,22 @@ import { formatMMK } from "../lib/currency";
 export function TransactionRow({ item }: { item: Transaction }) {
   const { palette } = useTheme();
   const expense = item.kind === "expense";
+  const categoryColor =
+    item.category?.color ?? (expense ? palette.danger : palette.success);
+  const categoryIcon =
+    (item.category?.icon as keyof typeof Ionicons.glyphMap | undefined) ??
+    (expense ? "card-outline" : "cash-outline");
   return (
     <View style={[s.row, { borderBottomColor: palette.border }]}>
       <View
         style={[
           s.icon,
           {
-            backgroundColor: expense
-              ? palette.primarySoft
-              : palette.successSoft,
+            backgroundColor: `${categoryColor}18`,
           },
         ]}
       >
-        <Ionicons
-          name={
-            (item.category?.icon as keyof typeof Ionicons.glyphMap) ||
-            "card-outline"
-          }
-          size={23}
-          color={expense ? palette.primary : palette.success}
-        />
+        <Ionicons name={categoryIcon} size={23} color={categoryColor} />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={[s.name, { color: palette.text }]} numberOfLines={1}>

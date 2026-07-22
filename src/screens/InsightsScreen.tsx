@@ -19,6 +19,10 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { Card, Label, Progress, Title } from "../components/UI";
 import { fonts } from "../theme";
 import { formatMMK } from "../lib/currency";
+import {
+  effectiveMonthlyLimitForMonth,
+  effectiveYearlyGoalForYear,
+} from "../lib/planningHistory";
 
 type Props = {
   categories: Category[];
@@ -69,7 +73,7 @@ export function InsightsScreen({
   const savingsRate = income > 0 ? (net / income) * 100 : null;
   const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const monthProgress = now.getDate() / days;
-  const cap = Number(profile?.monthly_spending_cap || 0);
+  const cap = effectiveMonthlyLimitForMonth(monthlyLimitHistory, profile, start);
   const safeToSpend = Math.max(0, cap - expense);
   const expectedSpend = cap * monthProgress;
   const pace = cap > 0 ? (expense / cap) * 100 : 0;
@@ -77,7 +81,11 @@ export function InsightsScreen({
     (item) => new Date(item.occurred_at).getFullYear() === now.getFullYear(),
   );
   const yearNet = total(yearItems, "income") - total(yearItems, "expense");
-  const goal = Number(profile?.yearly_savings_goal || 0);
+  const goal = effectiveYearlyGoalForYear(
+    yearlyGoalHistory,
+    profile,
+    now.getFullYear(),
+  );
   const goalProgress = goal > 0 ? Math.max(0, (yearNet / goal) * 100) : 0;
   const categoryTotals = categories
     .filter((category) => category.kind === "expense")
@@ -131,11 +139,11 @@ export function InsightsScreen({
       const yearIncome = total(yearTransactions, "income");
       const yearExpense = total(yearTransactions, "expense");
       const saved = yearIncome - yearExpense;
-      const effectiveGoal = [...yearlyGoalHistory]
-        .filter((item) => item.effective_year <= reportYear)
-        .sort((a, b) => a.effective_year - b.effective_year)
-        .at(-1)?.savings_goal;
-      const reportGoal = Number(effectiveGoal ?? 0);
+      const reportGoal = effectiveYearlyGoalForYear(
+        yearlyGoalHistory,
+        profile,
+        reportYear,
+      );
       return {
         year: reportYear,
         income: yearIncome,

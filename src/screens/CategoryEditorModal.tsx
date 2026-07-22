@@ -90,15 +90,15 @@ const icons: (keyof typeof Ionicons.glyphMap)[] = [
   "ellipsis-horizontal-outline",
 ];
 const colors = [
-  "#00236F",
-  "#4059AA",
-  "#00714E",
-  "#16A36A",
-  "#C9151E",
-  "#850024",
-  "#D97706",
-  "#7C3AED",
-  "#DB2777",
+  "#1D4ED8",
+  "#5338D6",
+  "#7C2D92",
+  "#BE185D",
+  "#C7354D",
+  "#B45309",
+  "#D98C00",
+  "#007A5A",
+  "#0F766E",
   "#475569",
 ];
 
@@ -121,7 +121,7 @@ export function CategoryEditorModal({
   const [budget, setBudget] = useState("");
   const [icon, setIcon] =
     useState<keyof typeof Ionicons.glyphMap>("card-outline");
-  const [color, setColor] = useState("#00236F");
+  const [color, setColor] = useState("#5338D6");
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     if (!visible) return;
@@ -131,7 +131,7 @@ export function CategoryEditorModal({
       (category?.icon as keyof typeof Ionicons.glyphMap) ??
         (kind === "expense" ? "card-outline" : "cash-outline"),
     );
-    setColor(category?.color ?? (kind === "expense" ? "#C9151E" : "#00714E"));
+    setColor(category?.color ?? (kind === "expense" ? "#C7354D" : "#007A5A"));
   }, [visible, category, kind]);
 
   async function save() {

@@ -23,6 +23,7 @@ import { CategoryEditorModal } from "./CategoryEditorModal";
 import { CategoryDetailModal } from "./CategoryDetailModal";
 import { useLanguage } from "../contexts/LanguageContext";
 import { MonthRangePickerModal } from "../components/MonthRangePickerModal";
+import { totalCategoryBudgetForRange } from "../lib/planningHistory";
 
 type Props = {
   categories: Category[];
@@ -73,11 +74,6 @@ export function CategoriesScreen({
   const list = categories.filter((category) => category.kind === kind);
   const now = new Date();
   const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const rangeMonths =
-    (rangeEnd.getFullYear() - rangeStart.getFullYear()) * 12 +
-    rangeEnd.getMonth() -
-    rangeStart.getMonth() +
-    1;
   const rangeNext = new Date(
     rangeEnd.getFullYear(),
     rangeEnd.getMonth() + 1,
@@ -118,28 +114,12 @@ export function CategoriesScreen({
   }
 
   function categoryBudgetForRange(category: Category) {
-    const history = categoryBudgetHistory
-      .filter((item) => item.category_id === category.id)
-      .sort(
-        (a, b) =>
-          new Date(a.effective_month).getTime() -
-          new Date(b.effective_month).getTime(),
-      );
-    let totalBudget = 0;
-    for (let index = 0; index < rangeMonths; index += 1) {
-      const month = new Date(
-        rangeStart.getFullYear(),
-        rangeStart.getMonth() + index,
-        1,
-      );
-      const effective = history
-        .filter((item) => new Date(`${item.effective_month}T00:00:00`) <= month)
-        .at(-1);
-      totalBudget += Number(
-        effective?.monthly_budget ?? category.monthly_budget ?? 0,
-      );
-    }
-    return totalBudget;
+    return totalCategoryBudgetForRange(
+      categoryBudgetHistory,
+      category,
+      rangeStart,
+      rangeEnd,
+    );
   }
 
   const totalRecordedBudget =
@@ -431,7 +411,12 @@ export function CategoriesScreen({
         visible={Boolean(detailCategory)}
         category={detailCategory}
         categories={categories}
-        transactions={transactions}
+        transactions={rangeTransactions}
+        rangeStart={rangeStart}
+        rangeEnd={rangeEnd}
+        periodBudget={
+          detailCategory ? categoryBudgetForRange(detailCategory) : 0
+        }
         onClose={() => setDetailId(null)}
         onSaved={refresh}
       />
