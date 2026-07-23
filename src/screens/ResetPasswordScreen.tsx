@@ -15,7 +15,7 @@ import { supabase } from "../lib/supabase";
 
 export function ResetPasswordScreen() {
   const { palette } = useTheme();
-  const { setRecovery } = useAuth();
+  const { completeRecovery } = useAuth();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
@@ -26,11 +26,11 @@ export function ResetPasswordScreen() {
     const { error } = await supabase.auth.updateUser({ password });
     setBusy(false);
     if (error) return Alert.alert("Could not reset password", error.message);
+    await completeRecovery();
     Alert.alert(
       "Password updated",
-      "You can now continue using Clarity Finance.",
+      "Please sign in again with your new password.",
     );
-    setRecovery(false);
   }
   return (
     <SafeAreaView

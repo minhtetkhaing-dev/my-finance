@@ -56,7 +56,7 @@ export function CapitalOnboardingModal({
             Set your starting capital
           </Title>
           <Text style={[styles.description, { color: palette.muted }]}>
-            Enter the money you currently have. Clarity Finance will use this as
+            Enter the money you currently have. My Finance will use this as
             the opening balance, then add income and subtract expenses.
           </Text>
           <Label>STARTING CAPITAL • MMK</Label>

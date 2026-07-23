@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Clarity Finance",
+    "name": "My Finance",
     "slug": "clarity-finance",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,7 +9,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Clarity Finance to choose your profile photo."
+          "photosPermission": "Allow My Finance to choose your profile photo."
         }
       ],
       [

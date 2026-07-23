@@ -1,4 +1,4 @@
-# Clarity Finance
+# My Finance
 
 One Expo/React Native TypeScript app for web, Android, and iOS, using Supabase Auth and Postgres. It implements the supplied dashboard, history, categories, login, profile, planning, and dark-mode designs.
 

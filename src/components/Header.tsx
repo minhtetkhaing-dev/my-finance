@@ -73,7 +73,7 @@ export function Header({
             numberOfLines={1}
             adjustsFontSizeToFit
           >
-            Clarity Finance
+            My Finance
           </Text>
           <Text style={[s.tagline, { color: palette.muted }]} numberOfLines={1}>
             {t("Money, made clear")}

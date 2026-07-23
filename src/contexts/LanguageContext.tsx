@@ -27,7 +27,7 @@ const my: Record<string, string> = {
   "Create account": "အကောင့်ဖွင့်ရန်",
   "Send reset link": "ပြန်လည်သတ်မှတ်ရန် လင့်ခ်ပို့ရန်",
   "Back to sign in": "အကောင့်ဝင်ရန် ပြန်သွားမည်",
-  "Welcome to Clarity Finance": "Clarity Finance မှ ကြိုဆိုပါသည်",
+  "Welcome to My Finance": "My Finance မှ ကြိုဆိုပါသည်",
   "Recover your account": "သင့်အကောင့်ကို ပြန်လည်ရယူပါ",
   "Current Balance": "လက်ရှိလက်ကျန်",
   "This Month Income": "ယခုလ ဝင်ငွေ",

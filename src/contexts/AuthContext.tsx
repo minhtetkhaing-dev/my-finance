@@ -16,12 +16,27 @@ const AuthContext = createContext<{
   loading: boolean;
   recovery: boolean;
   setRecovery: (value: boolean) => void;
-}>({ session: null, loading: true, recovery: false, setRecovery: () => {} });
+  completeRecovery: () => Promise<void>;
+}>({
+  session: null,
+  loading: true,
+  recovery: false,
+  setRecovery: () => {},
+  completeRecovery: async () => {},
+});
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [recovery, setRecovery] = useState(false);
+  async function completeRecovery() {
+    setRecovery(false);
+    setSession(null);
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      window.history.replaceState({}, "", "/");
+    }
+    await supabase.auth.signOut();
+  }
   useEffect(() => {
     async function handleUrl(url: string | null) {
       if (!url) return;
@@ -48,7 +63,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
     });
     const { data } = supabase.auth.onAuthStateChange((event, next) => {
       setSession(next);
-      if (event === "PASSWORD_RECOVERY") setRecovery(true);
+      if (!next) setRecovery(false);
+      else if (event === "PASSWORD_RECOVERY") setRecovery(true);
       setLoading(false);
     });
     return () => {
@@ -57,7 +73,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
     };
   }, []);
   return (
-    <AuthContext.Provider value={{ session, loading, recovery, setRecovery }}>
+    <AuthContext.Provider
+      value={{ session, loading, recovery, setRecovery, completeRecovery }}
+    >
       {children}
     </AuthContext.Provider>
   );
