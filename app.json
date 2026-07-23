@@ -15,7 +15,7 @@
       [
         "expo-notifications",
         {
-          "color": "#5338D6",
+          "color": "#6C3FE0",
           "defaultChannel": "finance-alerts"
         }
       ]
@@ -33,7 +33,7 @@
       "package": "com.minhtetkhaing.clarityfinance",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "backgroundColor": "#F6EFE6",
+        "backgroundColor": "#6320D6",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"

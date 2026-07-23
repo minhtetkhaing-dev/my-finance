@@ -1,7 +1,9 @@
 import { PropsWithChildren, useEffect, useRef, useState } from "react";
 import {
+  AccessibilityInfo,
   Animated,
   Easing,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -13,21 +15,39 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../contexts/ThemeContext";
 import { fonts, shadow } from "../theme";
 
+function useReduceMotion() {
+  const [reduce, setReduce] = useState(false);
+  useEffect(() => {
+    if (typeof AccessibilityInfo.isReduceMotionEnabled !== "function") return;
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduce);
+    const sub = AccessibilityInfo.addEventListener(
+      "reduceMotionChanged",
+      setReduce,
+    );
+    return () => sub.remove();
+  }, []);
+  return reduce;
+}
+
 export function Card({
   children,
   style,
-}: PropsWithChildren<{ style?: object }>) {
+  delay = 0,
+}: PropsWithChildren<{ style?: object; delay?: number }>) {
   const { palette } = useTheme();
   const entrance = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.spring(entrance, {
-      toValue: 1,
-      useNativeDriver: true,
-      damping: 18,
-      stiffness: 180,
-      mass: 0.8,
-    }).start();
-  }, [entrance]);
+    const timer = setTimeout(() => {
+      Animated.spring(entrance, {
+        toValue: 1,
+        useNativeDriver: true,
+        damping: 20,
+        stiffness: 160,
+        mass: 0.9,
+      }).start();
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [entrance, delay]);
   return (
     <Animated.View
       style={[
@@ -41,7 +61,13 @@ export function Card({
             {
               translateY: entrance.interpolate({
                 inputRange: [0, 1],
-                outputRange: [10, 0],
+                outputRange: [16, 0],
+              }),
+            },
+            {
+              scale: entrance.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.97, 1],
               }),
             },
           ],
@@ -89,7 +115,7 @@ export function Button({
     Animated.spring(pressScale, {
       toValue,
       useNativeDriver: true,
-      damping: 16,
+      damping: 14,
       stiffness: 320,
       mass: 0.45,
     }).start();
@@ -98,7 +124,7 @@ export function Button({
     <Pressable
       disabled={disabled}
       onPress={onPress}
-      onPressIn={() => animatePress(0.965)}
+      onPressIn={() => animatePress(0.96)}
       onPressOut={() => animatePress(1)}
       android_ripple={{
         color: secondary ? palette.primarySoft : "rgba(255,255,255,.2)",
@@ -184,17 +210,44 @@ export function Progress({
   risk?: boolean;
 }) {
   const { palette } = useTheme();
+  const reduceMotion = useReduceMotion();
   const progress = useRef(new Animated.Value(0)).current;
+  const shimmer = useRef(new Animated.Value(0)).current;
   const normalized = Math.min(100, Math.max(0, value));
   useEffect(() => {
     progress.stopAnimation();
     Animated.timing(progress, {
       toValue: normalized,
-      duration: 750,
+      duration: reduceMotion ? 0 : 900,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
-  }, [normalized, progress]);
+  }, [normalized, progress, reduceMotion]);
+  useEffect(() => {
+    if (reduceMotion) {
+      shimmer.stopAnimation();
+      shimmer.setValue(0.5);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmer, {
+          toValue: 1,
+          duration: 1400,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(shimmer, {
+          toValue: 0,
+          duration: 1400,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [shimmer, reduceMotion]);
   return (
     <View style={[s.track, { backgroundColor: palette.input }]}>
       <Animated.View
@@ -221,7 +274,27 @@ export function Progress({
                 : palette.success,
           },
         ]}
-      />
+      >
+        <Animated.View
+          style={[
+            s.shimmer,
+            {
+              opacity: shimmer.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.15, 0.55],
+              }),
+              transform: [
+                {
+                  translateX: shimmer.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-60, 60],
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
+      </Animated.View>
     </View>
   );
 }
@@ -277,7 +350,20 @@ const s = StyleSheet.create({
     gap: 10,
   },
   input: { flex: 1, fontFamily: fonts.regular, fontSize: 16 },
-  track: { height: 7, borderRadius: 99, overflow: "hidden" },
-  fill: { height: "100%", borderRadius: 99 },
+  track: { height: 8, borderRadius: 99, overflow: "hidden" },
+  fill: {
+    height: "100%",
+    borderRadius: 99,
+    overflow: "hidden",
+  },
+  shimmer: {
+    position: "absolute",
+    top: -4,
+    bottom: -4,
+    width: 48,
+    borderRadius: 99,
+    backgroundColor: "#fff",
+    transform: [{ rotate: "12deg" }],
+  },
   empty: { alignItems: "center", padding: 32, gap: 8 },
 });

@@ -1,5 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  AccessibilityInfo,
+  Animated,
+  Easing,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -159,12 +162,15 @@ export function DashboardScreen({
         showsVerticalScrollIndicator={false}
       >
         <Card
+          delay={0}
           style={[
             styles.balance,
             { backgroundColor: palette.ink, borderColor: palette.ink },
           ]}
         >
-          <View style={styles.balanceOrbLarge} />
+          <View
+            style={[styles.balanceOrbLarge, { backgroundColor: palette.primary }]}
+          />
           <View
             style={[
               styles.balanceOrbSmall,
@@ -194,12 +200,13 @@ export function DashboardScreen({
           <View style={styles.trend}>
             <Ionicons name="pulse" color={palette.highlight} />
             <Label style={{ color: "#fff" }}>
-              {t("CAPITAL + INCOME − EXPENSES")}
+              {t("CAPITAL + INCOME \u2212 EXPENSES")}
             </Label>
           </View>
         </Card>
         <View style={[styles.stats, stackStats && styles.statsCompact]}>
           <Card
+            delay={90}
             style={[
               styles.stat,
               {
@@ -219,6 +226,7 @@ export function DashboardScreen({
             </Title>
           </Card>
           <Card
+            delay={170}
             style={[
               styles.stat,
               {
@@ -238,11 +246,11 @@ export function DashboardScreen({
             </Title>
           </Card>
         </View>
-        <View style={styles.sectionTitle}>
+        <View style={[styles.sectionTitle, { marginTop: 16 }]}>
           <Title>{t("Category Breakdown")}</Title>
           <Label>{t("THIS MONTH")}</Label>
         </View>
-        <Card style={[styles.donutCard, compact && styles.donutCardCompact]}>
+        <Card delay={240} style={[styles.donutCard, compact && styles.donutCardCompact]}>
           {categoryBreakdown.length ? (
             <>
               <View
@@ -331,7 +339,7 @@ export function DashboardScreen({
           <Title>{t("Budget vs Actual")}</Title>
           <Label>{t("THIS MONTH")}</Label>
         </View>
-        <Card>
+        <Card delay={300}>
           {budgets.length ? (
             budgets.map((category) => {
               const spent = monthTransactions
@@ -375,7 +383,7 @@ export function DashboardScreen({
           <Title>{t("Recent Transactions")}</Title>
           <Label>{t("Tap to view").toUpperCase()}</Label>
         </View>
-        <Card style={{ paddingVertical: 0 }}>
+        <Card delay={360} style={{ paddingVertical: 0 }}>
           {transactions.length ? (
             transactions.slice(0, 4).map((item) => (
               <Pressable key={item.id} onPress={() => edit(item)}>
@@ -390,12 +398,7 @@ export function DashboardScreen({
         </Card>
         <View style={{ height: 80 }} />
       </ScrollView>
-      <Pressable
-        onPress={add}
-        style={[styles.fab, { backgroundColor: palette.primary }]}
-      >
-        <Ionicons name="add" size={34} color="#fff" />
-      </Pressable>
+      <Fab onPress={add} palette={palette} />
       <TransactionModal
         visible={open}
         categories={categories}
@@ -414,6 +417,74 @@ export function DashboardScreen({
   );
 }
 
+function Fab({
+  onPress,
+  palette,
+}: {
+  onPress: () => void;
+  palette: ReturnType<typeof useTheme>["palette"];
+}) {
+  const scale = useRef(new Animated.Value(0)).current;
+  const press = useRef(new Animated.Value(1)).current;
+  const [reduceMotion, setReduceMotion] = useState(false);
+  useEffect(() => {
+    if (typeof AccessibilityInfo.isReduceMotionEnabled !== "function") return;
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const sub = AccessibilityInfo.addEventListener(
+      "reduceMotionChanged",
+      setReduceMotion,
+    );
+    return () => sub.remove();
+  }, []);
+  useEffect(() => {
+    if (reduceMotion) {
+      scale.setValue(1);
+      return;
+    }
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      damping: 12,
+      stiffness: 170,
+      mass: 0.7,
+      delay: 450,
+    }).start();
+  }, [scale, reduceMotion]);
+  const animatePress = (toValue: number) => {
+    Animated.spring(press, {
+      toValue,
+      useNativeDriver: true,
+      damping: 13,
+      stiffness: 360,
+      mass: 0.4,
+    }).start();
+  };
+  return (
+    <Animated.View
+      style={[
+        styles.fabWrap,
+        {
+          transform: [
+            { scale: Animated.multiply(scale, press) },
+          ],
+        },
+      ]}
+    >
+      <Pressable
+        onPress={onPress}
+        onPressIn={() => animatePress(0.88)}
+        onPressOut={() => animatePress(1)}
+        android_ripple={{ color: "rgba(255,255,255,.25)", radius: 28 }}
+        style={[styles.fab, { backgroundColor: palette.primary }]}
+      >
+        <Ionicons name="add" size={34} color="#fff" />
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
 function CategoryDonut({
   data,
   palette,
@@ -426,8 +497,31 @@ function CategoryDonut({
   const strokeWidth = size < 170 ? 22 : 25;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
+  const draw = useRef(new Animated.Value(0)).current;
+  const [reduceMotion, setReduceMotion] = useState(false);
+  useEffect(() => {
+    if (typeof AccessibilityInfo.isReduceMotionEnabled !== "function") return;
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const sub = AccessibilityInfo.addEventListener(
+      "reduceMotionChanged",
+      setReduceMotion,
+    );
+    return () => sub.remove();
+  }, []);
+  useEffect(() => {
+    if (reduceMotion) {
+      draw.setValue(1);
+      return;
+    }
+    Animated.timing(draw, {
+      toValue: 1,
+      duration: 1100,
+      delay: 300,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [draw, reduceMotion]);
   let offset = 0;
-
   return (
     <Svg width={size} height={size}>
       <Circle
@@ -438,11 +532,11 @@ function CategoryDonut({
         strokeWidth={strokeWidth}
         fill="transparent"
       />
-      <G rotation="-90" originX={size / 2} originY={size / 2}>
+      <G transform={`rotate(-90 ${size / 2} ${size / 2})`}>
         {data.map((item) => {
           const dash = (item.percentage / 100) * circumference;
           const segment = (
-            <Circle
+            <AnimatedCircle
               key={item.id}
               cx={size / 2}
               cy={size / 2}
@@ -450,9 +544,20 @@ function CategoryDonut({
               stroke={item.color}
               strokeWidth={strokeWidth}
               strokeDasharray={`${dash} ${circumference - dash}`}
-              strokeDashoffset={-offset}
               strokeLinecap="round"
               fill="transparent"
+              strokeDashoffset={draw.interpolate({
+                inputRange: [0, 1],
+                outputRange: [
+                  -offset - dash,
+                  -offset,
+                ],
+              })}
+              opacity={draw.interpolate({
+                inputRange: [0, 0.6],
+                outputRange: [0, 1],
+                extrapolate: "clamp",
+              })}
             />
           );
           offset += dash;
@@ -471,7 +576,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignSelf: "center",
   },
-  balance: { padding: 26, gap: 13, borderRadius: 30 },
+  balance: { padding: 26, gap: 13, borderRadius: 30, overflow: "hidden" },
   balanceTop: {
     flexDirection: "row",
     alignItems: "center",
@@ -494,20 +599,21 @@ const styles = StyleSheet.create({
   },
   balanceOrbLarge: {
     position: "absolute",
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: "#6D28D9",
-    right: -58,
-    top: -70,
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+    opacity: 0.55,
+    right: -64,
+    top: -78,
   },
   balanceOrbSmall: {
     position: "absolute",
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     right: 86,
-    bottom: -12,
+    bottom: -14,
+    opacity: 0.85,
   },
   balanceValue: {
     fontFamily: fonts.bold,
@@ -618,15 +724,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   empty: { height: 90, alignItems: "center", justifyContent: "center" },
-  fab: {
+  fabWrap: {
     position: "absolute",
     right: 24,
     bottom: 20,
+  },
+  fab: {
     height: 58,
     width: 58,
     borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
-    elevation: 6,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.28,
+    shadowRadius: 12,
   },
 });
