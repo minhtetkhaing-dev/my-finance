@@ -155,18 +155,18 @@ export function SharedBillsScreen({
   }
 
   async function createSharedBill() {
-    if (!session) return Alert.alert("Please sign in again");
-    if (!description.trim()) return Alert.alert("Enter a description");
+    if (!session) return Alert.alert(t("Please sign in again"));
+    if (!description.trim()) return Alert.alert(t("Enter a description"));
     if (!Number.isFinite(parsedTotal) || parsedTotal <= 0)
-      return Alert.alert("Enter a valid total amount");
+      return Alert.alert(t("Enter a valid total amount"));
     if (!Number.isInteger(parsedPeople) || parsedPeople <= 0)
-      return Alert.alert("Enter a valid number of people");
+      return Alert.alert(t("Enter a valid number of people"));
     if (!Number.isFinite(parsedShare) || parsedShare <= 0)
-      return Alert.alert("Enter a valid amount per person");
+      return Alert.alert(t("Enter a valid amount per person"));
     if (!Number.isFinite(parsedExpectedBack) || parsedExpectedBack < 0)
-      return Alert.alert("Enter a valid expected back amount");
+      return Alert.alert(t("Enter a valid expected back amount"));
     if (parsedExpectedBack >= parsedTotal)
-      return Alert.alert("Expected back amount must be less than the total");
+      return Alert.alert(t("Expected back amount must be less than the total"));
     setBusy(true);
     const occurredAt = new Date().toISOString();
     const expense = await supabase
@@ -177,14 +177,14 @@ export function SharedBillsScreen({
         amount: parsedTotal,
         kind: "expense",
         merchant: description.trim(),
-        note: "Shared bill paid first",
+        note: t("Shared bill paid first"),
         occurred_at: occurredAt,
       })
       .select("id")
       .single();
     if (expense.error) {
       setBusy(false);
-      return Alert.alert("Could not create expense", expense.error.message);
+      return Alert.alert(t("Could not create expense"), expense.error.message);
     }
     const bill = await supabase
       .from("shared_bills")
@@ -209,7 +209,7 @@ export function SharedBillsScreen({
         .eq("id", expense.data.id)
         .eq("user_id", session.user.id);
       setBusy(false);
-      return Alert.alert("Could not create shared bill", bill.error.message);
+      return Alert.alert(t("Could not create shared bill"), bill.error.message);
     }
     resetCreateForm();
     setCreating(false);
@@ -219,17 +219,19 @@ export function SharedBillsScreen({
   }
 
   async function recordPayback() {
-    if (!session) return Alert.alert("Please sign in again");
-    if (!detailBill) return Alert.alert("Choose a shared bill");
-    if (!payerName.trim()) return Alert.alert("Enter who paid back");
+    if (!session) return Alert.alert(t("Please sign in again"));
+    if (!detailBill) return Alert.alert(t("Choose a shared bill"));
+    if (!payerName.trim()) return Alert.alert(t("Enter who paid back"));
     const amount = parseAmount(paybackAmount);
     if (!Number.isFinite(amount) || amount <= 0)
-      return Alert.alert("Enter a valid payback amount");
+      return Alert.alert(t("Enter a valid payback amount"));
     const remaining = remainingAmount(detailBill);
     if (remaining <= 0)
-      return Alert.alert("This shared bill is already closed");
+      return Alert.alert(t("This shared bill is already closed"));
     if (amount > remaining)
-      return Alert.alert("Payback amount is more than the expected remaining amount");
+      return Alert.alert(
+        t("Payback amount is more than the expected remaining amount"),
+      );
     setBusy(true);
     try {
       const paidAt = new Date().toISOString();
@@ -247,7 +249,7 @@ export function SharedBillsScreen({
       await refresh();
     } catch (error) {
       Alert.alert(
-        "Could not record payback",
+        t("Could not record payback"),
         error instanceof Error ? error.message : String(error),
       );
     } finally {
@@ -256,26 +258,28 @@ export function SharedBillsScreen({
   }
 
   async function saveSharedBillEdit() {
-    if (!session) return Alert.alert("Please sign in again");
-    if (!detailBill) return Alert.alert("Choose a shared bill");
+    if (!session) return Alert.alert(t("Please sign in again"));
+    if (!detailBill) return Alert.alert(t("Choose a shared bill"));
     const nextTotal = parseAmount(editTotal);
     const nextPeople = Number(editPeople.trim());
     const nextShare = parseAmount(editAmountPerPerson);
     const nextExpected = parseAmount(editExpectedBack);
     const paid = paidTotal(detailBill);
-    if (!editDescription.trim()) return Alert.alert("Enter a description");
+    if (!editDescription.trim()) return Alert.alert(t("Enter a description"));
     if (!Number.isFinite(nextTotal) || nextTotal <= 0)
-      return Alert.alert("Enter a valid total amount");
+      return Alert.alert(t("Enter a valid total amount"));
     if (!Number.isInteger(nextPeople) || nextPeople <= 0)
-      return Alert.alert("Enter a valid number of people");
+      return Alert.alert(t("Enter a valid number of people"));
     if (!Number.isFinite(nextShare) || nextShare <= 0)
-      return Alert.alert("Enter a valid amount per person");
+      return Alert.alert(t("Enter a valid amount per person"));
     if (!Number.isFinite(nextExpected) || nextExpected < 0)
-      return Alert.alert("Enter a valid expected back amount");
+      return Alert.alert(t("Enter a valid expected back amount"));
     if (nextExpected >= nextTotal)
-      return Alert.alert("Expected back amount must be less than the total");
+      return Alert.alert(t("Expected back amount must be less than the total"));
     if (nextExpected < paid)
-      return Alert.alert("Expected back amount cannot be less than paid back");
+      return Alert.alert(
+        t("Expected back amount cannot be less than paid back"),
+      );
     setBusy(true);
     try {
       const closedAt =
@@ -302,7 +306,7 @@ export function SharedBillsScreen({
           category_id: editCategoryId,
           merchant: editDescription.trim(),
           amount: Math.max(0.01, nextTotal - Math.min(paid, nextExpected)),
-          note: "Shared bill paid first",
+          note: t("Shared bill paid first"),
         })
         .eq("id", detailBill.transaction_id)
         .eq("user_id", session.user.id);
@@ -311,7 +315,7 @@ export function SharedBillsScreen({
       await refresh();
     } catch (error) {
       Alert.alert(
-        "Could not update shared bill",
+        t("Could not update shared bill"),
         error instanceof Error ? error.message : String(error),
       );
     } finally {

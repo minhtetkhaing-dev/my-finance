@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Transaction } from "../types";
 import { useTheme } from "../contexts/ThemeContext";
+import { useLanguage } from "../contexts/LanguageContext";
 import { fonts } from "../theme";
 import { formatMMK } from "../lib/currency";
 export function TransactionRow({
@@ -12,6 +13,7 @@ export function TransactionRow({
   sharedBill?: boolean;
 }) {
   const { palette } = useTheme();
+  const { t } = useLanguage();
   const expense = item.kind === "expense";
   const categoryColor =
     item.category?.color ?? (expense ? palette.danger : palette.success);
@@ -40,7 +42,7 @@ export function TransactionRow({
             numberOfLines={1}
           >
             {new Date(item.occurred_at).toLocaleDateString()} •{" "}
-            {item.category?.name || item.note || "Other"}
+            {item.category?.name || item.note || t("Other")}
           </Text>
           {sharedBill && (
             <View
@@ -58,7 +60,7 @@ export function TransactionRow({
                 color={palette.primary}
               />
               <Text style={[s.badgeText, { color: palette.primary }]}>
-                Shared
+                {t("Shared")}
               </Text>
             </View>
           )}
