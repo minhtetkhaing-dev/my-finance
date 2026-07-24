@@ -3,10 +3,10 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   StyleSheet,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Button, Card, Field, Label, Title } from "../components/UI";
 import { useTheme } from "../contexts/ThemeContext";

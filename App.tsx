@@ -1,7 +1,12 @@
 import "react-native-url-polyfill/auto";
 import { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import {
+  initialWindowMetrics,
+  SafeAreaProvider,
+  SafeAreaView,
+} from "react-native-safe-area-context";
 import {
   useFonts,
   Inter_400Regular,
@@ -27,7 +32,7 @@ function Root() {
 
   if (loading) {
     return (
-      <View
+      <SafeAreaView
         style={{
           flex: 1,
           alignItems: "center",
@@ -38,7 +43,7 @@ function Root() {
         }}
       >
         <ActivityIndicator size="large" color={colors.light.primary} />
-      </View>
+      </SafeAreaView>
     );
   }
   return (
@@ -64,12 +69,14 @@ export default function App() {
   });
   if (!loaded) return null;
   return (
-    <LanguageProvider>
-      <ThemeProvider>
-        <AuthProvider>
-          <Root />
-        </AuthProvider>
-      </ThemeProvider>
-    </LanguageProvider>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <LanguageProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <Root />
+          </AuthProvider>
+        </ThemeProvider>
+      </LanguageProvider>
+    </SafeAreaProvider>
   );
 }
