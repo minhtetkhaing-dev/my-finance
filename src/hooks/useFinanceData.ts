@@ -5,6 +5,7 @@ import {
   CategoryBudgetHistory,
   MonthlyLimitHistory,
   Profile,
+  SharedBill,
   Transaction,
   YearlyGoalHistory,
 } from "../types";
@@ -31,6 +32,7 @@ async function fetchAllTransactions() {
 export function useFinanceData() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [sharedBills, setSharedBills] = useState<SharedBill[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [monthlyLimitHistory, setMonthlyLimitHistory] = useState<
     MonthlyLimitHistory[]
@@ -46,10 +48,16 @@ export function useFinanceData() {
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const refresh = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
-    const [c, t, p, monthlyPlans, yearlyPlans, categoryPlans] =
+    const [c, t, bills, p, monthlyPlans, yearlyPlans, categoryPlans] =
       await Promise.all([
         supabase.from("categories").select("*").order("created_at"),
         fetchAllTransactions(),
+        supabase
+          .from("shared_bills")
+          .select(
+            "*, category:categories(name,color,icon), expense:transactions!shared_bills_transaction_id_fkey(id,amount,merchant,note,occurred_at), paybacks:shared_bill_paybacks(*)",
+          )
+          .order("occurred_at", { ascending: false }),
         supabase.from("profiles").select("*").maybeSingle(),
         supabase
           .from("monthly_limit_history")
@@ -69,6 +77,7 @@ export function useFinanceData() {
     const firstError =
       c.error ??
       t.error ??
+      bills.error ??
       p.error ??
       monthlyPlans.error ??
       yearlyPlans.error ??
@@ -76,6 +85,7 @@ export function useFinanceData() {
     setError(firstError ? `Database: ${firstError.message}` : null);
     setCategories((c.data ?? []) as Category[]);
     setTransactions((t.data ?? []) as Transaction[]);
+    setSharedBills((bills.data ?? []) as SharedBill[]);
     if (p.data) setProfile(p.data as Profile);
     setMonthlyLimitHistory((monthlyPlans.data ?? []) as MonthlyLimitHistory[]);
     setYearlyGoalHistory((yearlyPlans.data ?? []) as YearlyGoalHistory[]);
@@ -97,6 +107,16 @@ export function useFinanceData() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "transactions" },
+        refreshSoon,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "shared_bills" },
+        refreshSoon,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "shared_bill_paybacks" },
         refreshSoon,
       )
       .on(
@@ -133,6 +153,7 @@ export function useFinanceData() {
   return {
     categories,
     transactions,
+    sharedBills,
     profile,
     monthlyLimitHistory,
     yearlyGoalHistory,

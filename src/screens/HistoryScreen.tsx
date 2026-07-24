@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 import Svg, { Circle, Line, Path } from "react-native-svg";
-import { Category, Profile, Transaction } from "../types";
+import { Category, Profile, SharedBill, Transaction } from "../types";
 import { useTheme } from "../contexts/ThemeContext";
 import { Card, Field, Label, Title } from "../components/UI";
 import { TransactionRow } from "../components/TransactionRow";
@@ -20,6 +20,7 @@ import { TransactionDetailModal } from "./TransactionDetailModal";
 type Props = {
   categories: Category[];
   transactions: Transaction[];
+  sharedBills: SharedBill[];
   profile: Profile | null;
   refresh: () => Promise<void>;
   loading: boolean;
@@ -83,7 +84,12 @@ function chartData(items: Transaction[], yearly: boolean, width: number) {
   };
 }
 
-export function HistoryScreen({ categories, transactions, refresh }: Props) {
+export function HistoryScreen({
+  categories,
+  transactions,
+  sharedBills,
+  refresh,
+}: Props) {
   const { palette } = useTheme();
   const { t } = useLanguage();
   const { width } = useWindowDimensions();
@@ -92,6 +98,10 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
   const [yearly, setYearly] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [chartWidth, setChartWidth] = useState(400);
+  const sharedBillTransactionIds = useMemo(
+    () => new Set(sharedBills.map((bill) => bill.transaction_id)),
+    [sharedBills],
+  );
   const now = new Date();
   const currentStart = periodStart(now, yearly);
   const nextStart = periodStart(now, yearly, 1);
@@ -281,7 +291,10 @@ export function HistoryScreen({ categories, transactions, refresh }: Props) {
           {filtered.length ? (
             filtered.map((item) => (
               <Pressable key={item.id} onPress={() => setEditing(item)}>
-                <TransactionRow item={item} />
+                <TransactionRow
+                  item={item}
+                  sharedBill={sharedBillTransactionIds.has(item.id)}
+                />
               </Pressable>
             ))
           ) : (

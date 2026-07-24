@@ -16,6 +16,7 @@ import {
   Category,
   CategoryBudgetHistory,
   Profile,
+  SharedBill,
   Transaction,
 } from "../types";
 import { useTheme } from "../contexts/ThemeContext";
@@ -34,6 +35,7 @@ import {
 type Props = {
   categories: Category[];
   transactions: Transaction[];
+  sharedBills: SharedBill[];
   profile: Profile | null;
   categoryBudgetHistory: CategoryBudgetHistory[];
   refresh: () => Promise<void>;
@@ -42,6 +44,7 @@ type Props = {
 export function DashboardScreen({
   categories,
   transactions,
+  sharedBills,
   profile,
   categoryBudgetHistory,
   refresh,
@@ -54,6 +57,10 @@ export function DashboardScreen({
   const chartSize = compact ? 150 : 176;
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
+  const sharedBillTransactionIds = useMemo(
+    () => new Set(sharedBills.map((bill) => bill.transaction_id)),
+    [sharedBills],
+  );
   const now = new Date();
   const currentMonth = monthStart(now);
   const monthTransactions = transactions.filter((item) => {
@@ -387,7 +394,10 @@ export function DashboardScreen({
           {transactions.length ? (
             transactions.slice(0, 4).map((item) => (
               <Pressable key={item.id} onPress={() => edit(item)}>
-                <TransactionRow item={item} />
+                <TransactionRow
+                  item={item}
+                  sharedBill={sharedBillTransactionIds.has(item.id)}
+                />
               </Pressable>
             ))
           ) : (

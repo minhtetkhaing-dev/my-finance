@@ -17,6 +17,33 @@ export type Transaction = {
   occurred_at: string;
   category?: Pick<Category, "name" | "color" | "icon"> | null;
 };
+export type SharedBill = {
+  id: string;
+  transaction_id: string;
+  category_id: string | null;
+  total_amount: number;
+  description: string;
+  people_count: number;
+  amount_per_person: number;
+  expected_back_amount: number;
+  occurred_at: string;
+  closed_at: string | null;
+  created_at: string;
+  category?: Pick<Category, "name" | "color" | "icon"> | null;
+  expense?: Pick<
+    Transaction,
+    "id" | "amount" | "merchant" | "note" | "occurred_at"
+  > | null;
+  paybacks?: SharedBillPayback[];
+};
+export type SharedBillPayback = {
+  id: string;
+  shared_bill_id: string;
+  payer_name: string;
+  amount: number;
+  paid_at: string;
+  created_at: string;
+};
 export type Profile = {
   id: string;
   full_name: string | null;

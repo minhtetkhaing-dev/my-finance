@@ -19,6 +19,7 @@ import { HistoryScreen } from "./HistoryScreen";
 import { CategoriesScreen } from "./CategoriesScreen";
 import { ProfileScreen } from "./ProfileScreen";
 import { InsightsScreen } from "./InsightsScreen";
+import { SharedBillsScreen } from "./SharedBillsScreen";
 import { CapitalOnboardingModal } from "./CapitalOnboardingModal";
 import { useLanguage } from "../contexts/LanguageContext";
 import { buildFinanceNotifications } from "../lib/financeNotifications";
@@ -46,15 +47,16 @@ const tabs = [
     active: "sparkles",
   },
   {
-    key: "profile",
-    label: "Profile",
-    icon: "person-outline",
-    active: "person",
+    key: "sharedBills",
+    label: "Shared Bills",
+    icon: "receipt-outline",
+    active: "receipt",
   },
 ] as const;
 export type TabKey = (typeof tabs)[number]["key"];
+type ScreenKey = TabKey | "profile";
 export function AppShell() {
-  const [tab, setTab] = useState<TabKey>("dashboard");
+  const [tab, setTab] = useState<ScreenKey>("dashboard");
   const { palette } = useTheme();
   const data = useFinanceData();
   const { setLanguage, t } = useLanguage();
@@ -69,7 +71,7 @@ export function AppShell() {
   useEffect(() => {
     if (data.profile?.language) setLanguage(data.profile.language);
   }, [data.profile?.language]);
-  function changeTab(next: TabKey) {
+  function changeTab(next: ScreenKey) {
     if (next === tab) return;
     direction.current =
       tabs.findIndex((item) => item.key === next) >
@@ -103,8 +105,10 @@ export function AppShell() {
       <CategoriesScreen {...data} />
     ) : tab === "insights" ? (
       <InsightsScreen {...data} />
-    ) : (
+    ) : tab === "profile" ? (
       <ProfileScreen {...data} />
+    ) : (
+      <SharedBillsScreen {...data} />
     );
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: palette.background }]}>
@@ -168,8 +172,8 @@ function Nav({
   setTab,
   vertical,
 }: {
-  tab: TabKey;
-  setTab: (value: TabKey) => void;
+  tab: ScreenKey;
+  setTab: (value: ScreenKey) => void;
   vertical?: boolean;
 }) {
   const { palette, isDark } = useTheme();
@@ -184,7 +188,7 @@ function Nav({
     : 0;
 
   useEffect(() => {
-    if (vertical) return;
+    if (vertical || activeIndex < 0) return;
     Animated.spring(indicator, {
       toValue: activeIndex,
       useNativeDriver: true,
@@ -212,7 +216,7 @@ function Nav({
         vertical && s.navVertical,
       ]}
     >
-      {!vertical && tabWidth > 0 && (
+      {!vertical && tabWidth > 0 && activeIndex >= 0 && (
         <Animated.View
           pointerEvents="none"
           style={[

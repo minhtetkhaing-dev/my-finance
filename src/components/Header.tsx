@@ -51,22 +51,29 @@ export function Header({
   return (
     <>
       <View style={s.header}>
-        {avatarUrl ? (
-          <Image source={{ uri: avatarUrl }} style={s.avatar} />
-        ) : (
-          <View
-            style={[
-              s.avatar,
-              {
-                backgroundColor: palette.primarySoft,
-                alignItems: "center",
-                justifyContent: "center",
-              },
-            ]}
-          >
-            <Ionicons name="person" size={20} color={palette.primary} />
-          </View>
-        )}
+        <Pressable
+          onPress={() => onNavigate("profile")}
+          accessibilityRole="button"
+          accessibilityLabel={t("Profile")}
+          style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.94 : 1 }] })}
+        >
+          {avatarUrl ? (
+            <Image source={{ uri: avatarUrl }} style={s.avatar} />
+          ) : (
+            <View
+              style={[
+                s.avatar,
+                {
+                  backgroundColor: palette.primarySoft,
+                  alignItems: "center",
+                  justifyContent: "center",
+                },
+              ]}
+            >
+              <Ionicons name="person" size={20} color={palette.primary} />
+            </View>
+          )}
+        </Pressable>
         <View style={s.brandCopy}>
           <Text
             style={[s.title, { color: palette.text }]}

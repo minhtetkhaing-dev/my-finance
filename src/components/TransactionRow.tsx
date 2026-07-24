@@ -4,7 +4,13 @@ import { Transaction } from "../types";
 import { useTheme } from "../contexts/ThemeContext";
 import { fonts } from "../theme";
 import { formatMMK } from "../lib/currency";
-export function TransactionRow({ item }: { item: Transaction }) {
+export function TransactionRow({
+  item,
+  sharedBill,
+}: {
+  item: Transaction;
+  sharedBill?: boolean;
+}) {
   const { palette } = useTheme();
   const expense = item.kind === "expense";
   const categoryColor =
@@ -28,10 +34,35 @@ export function TransactionRow({ item }: { item: Transaction }) {
         <Text style={[s.name, { color: palette.text }]} numberOfLines={1}>
           {item.merchant}
         </Text>
-        <Text style={[s.note, { color: palette.muted }]} numberOfLines={1}>
-          {new Date(item.occurred_at).toLocaleDateString()} •{" "}
-          {item.category?.name || item.note || "Other"}
-        </Text>
+        <View style={s.metaRow}>
+          <Text
+            style={[s.note, { color: palette.muted }]}
+            numberOfLines={1}
+          >
+            {new Date(item.occurred_at).toLocaleDateString()} •{" "}
+            {item.category?.name || item.note || "Other"}
+          </Text>
+          {sharedBill && (
+            <View
+              style={[
+                s.badge,
+                {
+                  backgroundColor: palette.primarySoft,
+                  borderColor: `${palette.primary}44`,
+                },
+              ]}
+            >
+              <Ionicons
+                name="receipt-outline"
+                size={12}
+                color={palette.primary}
+              />
+              <Text style={[s.badgeText, { color: palette.primary }]}>
+                Shared
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
       <Text
         style={[
@@ -64,5 +95,17 @@ const s = StyleSheet.create({
   },
   name: { fontFamily: fonts.semibold, fontSize: 16 },
   note: { fontFamily: fonts.regular, fontSize: 13, marginTop: 3 },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: 7 },
+  badge: {
+    minHeight: 22,
+    borderRadius: 9,
+    borderWidth: 1,
+    paddingHorizontal: 7,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    marginTop: 3,
+  },
+  badgeText: { fontFamily: fonts.semibold, fontSize: 11 },
   amount: { fontFamily: fonts.bold, fontSize: 16, maxWidth: "38%" },
 });
