@@ -204,10 +204,12 @@ export function Progress({
   value,
   danger,
   risk,
+  reverseRisk,
 }: {
   value: number;
   danger?: boolean;
   risk?: boolean;
+  reverseRisk?: boolean;
 }) {
   const { palette } = useTheme();
   const reduceMotion = useReduceMotion();
@@ -263,13 +265,21 @@ export function Progress({
               : risk
                 ? progress.interpolate({
                     inputRange: [0, 40, 65, 85, 100],
-                    outputRange: [
-                      palette.success,
-                      palette.success,
-                      "#FACC15",
-                      "#F97316",
-                      palette.danger,
-                    ],
+                    outputRange: reverseRisk
+                      ? [
+                          palette.danger,
+                          "#F97316",
+                          "#FACC15",
+                          palette.success,
+                          palette.success,
+                        ]
+                      : [
+                          palette.success,
+                          palette.success,
+                          "#FACC15",
+                          "#F97316",
+                          palette.danger,
+                        ],
                   })
                 : palette.success,
           },
@@ -326,9 +336,9 @@ const s = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.bold,
-    fontSize: 25,
-    lineHeight: 31,
-    letterSpacing: -0.75,
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: -0.35,
   },
   button: {
     height: 56,

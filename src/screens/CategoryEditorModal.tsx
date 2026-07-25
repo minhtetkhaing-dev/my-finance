@@ -101,6 +101,64 @@ const colors = [
   "#0F766E",
   "#475569",
 ];
+const hexPattern = /^#[0-9A-F]{6}$/i;
+const wheelSize = 238;
+const wheelRadius = wheelSize / 2;
+
+function hslToHex(h: number, s: number, l: number) {
+  const saturation = s / 100;
+  const lightness = l / 100;
+  const chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
+  const segment = h / 60;
+  const x = chroma * (1 - Math.abs((segment % 2) - 1));
+  const match = lightness - chroma / 2;
+  const [r, g, b] =
+    segment < 1
+      ? [chroma, x, 0]
+      : segment < 2
+        ? [x, chroma, 0]
+        : segment < 3
+          ? [0, chroma, x]
+          : segment < 4
+            ? [0, x, chroma]
+            : segment < 5
+              ? [x, 0, chroma]
+              : [chroma, 0, x];
+  return rgbToHex((r + match) * 255, (g + match) * 255, (b + match) * 255);
+}
+
+const wheelDots = Array.from({ length: 6 }).flatMap((_, ringIndex) => {
+  const ring = ringIndex + 1;
+  const radius = ring * 17;
+  const count = ring === 1 ? 12 : ring * 10;
+  return Array.from({ length: count }).map((__, index) => {
+    const angle = (index / count) * Math.PI * 2;
+    const hue = ((angle * 180) / Math.PI + 360) % 360;
+    const saturation = Math.min(100, (radius / 104) * 100);
+    return {
+      key: `${ring}-${index}`,
+      color: hslToHex(hue, saturation, 54),
+      left: wheelRadius + Math.cos(angle) * radius - 8,
+      top: wheelRadius + Math.sin(angle) * radius - 8,
+    };
+  });
+});
+
+function normalizeHex(value: string) {
+  const next = value.trim().replace(/^#?/, "#").toUpperCase();
+  return hexPattern.test(next) ? next : null;
+}
+
+function rgbToHex(r: number, g: number, b: number) {
+  return `#${[r, g, b]
+    .map((value) =>
+      Math.max(0, Math.min(255, Math.round(value)))
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")
+    .toUpperCase()}`;
+}
 
 export function CategoryEditorModal({
   visible,
@@ -122,17 +180,30 @@ export function CategoryEditorModal({
   const [icon, setIcon] =
     useState<keyof typeof Ionicons.glyphMap>("card-outline");
   const [color, setColor] = useState("#5338D6");
+  const [colorInput, setColorInput] = useState("#5338D6");
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     if (!visible) return;
+    const nextColor =
+      category?.color ?? (kind === "expense" ? "#C7354D" : "#007A5A");
     setName(category?.name ?? "");
     setBudget(category?.monthly_budget?.toString() ?? "");
     setIcon(
       (category?.icon as keyof typeof Ionicons.glyphMap) ??
         (kind === "expense" ? "card-outline" : "cash-outline"),
     );
-    setColor(category?.color ?? (kind === "expense" ? "#C7354D" : "#007A5A"));
+    setColor(nextColor);
+    setColorInput(nextColor);
   }, [visible, category, kind]);
+
+  function chooseColor(value: string) {
+    const normalized = normalizeHex(value);
+    setColorInput(value.toUpperCase());
+    if (normalized) {
+      setColor(normalized);
+      setColorInput(normalized);
+    }
+  }
 
   async function save() {
     if (!session) return;
@@ -146,10 +217,12 @@ export function CategoryEditorModal({
       (!Number.isFinite(parsedBudget) || parsedBudget < 0)
     )
       return Alert.alert("Enter a valid MMK budget");
+    if (!normalizeHex(colorInput))
+      return Alert.alert("Enter a valid hex color like #007A5A");
     setBusy(true);
     const payload = {
       name: trimmed,
-      color,
+      color: normalizeHex(colorInput) ?? color,
       icon,
       monthly_budget: parsedBudget,
     };
@@ -272,13 +345,15 @@ export function CategoryEditorModal({
                 </Pressable>
               ))}
             </View>
-            <Label>SELECT COLOR</Label>
+            <Label>COLOR</Label>
+            <ColorWheel color={color} onChange={chooseColor} />
+            <Label>QUICK COLORS</Label>
             <View style={styles.colorRow}>
               {colors.map((value) => (
                 <Pressable
                   accessibilityLabel={value}
                   key={value}
-                  onPress={() => setColor(value)}
+                  onPress={() => chooseColor(value)}
                   style={[
                     styles.colorOption,
                     {
@@ -314,6 +389,63 @@ export function CategoryEditorModal({
         </View>
       </View>
     </Modal>
+  );
+}
+
+function ColorWheel({
+  color,
+  onChange,
+}: {
+  color: string;
+  onChange: (value: string) => void;
+}) {
+  function updateFromTouch(locationX: number, locationY: number) {
+    const dx = locationX - wheelRadius;
+    const dy = locationY - wheelRadius;
+    const distance = Math.min(wheelRadius, Math.sqrt(dx * dx + dy * dy));
+    const saturation = (distance / wheelRadius) * 100;
+    const hue = ((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 360;
+    onChange(hslToHex(hue, saturation, 54));
+  }
+  return (
+    <View style={styles.colorWheelWrap}>
+      <View
+        style={styles.colorWheel}
+        onStartShouldSetResponder={() => true}
+        onMoveShouldSetResponder={() => true}
+        onResponderGrant={(event) =>
+          updateFromTouch(
+            event.nativeEvent.locationX,
+            event.nativeEvent.locationY,
+          )
+        }
+        onResponderMove={(event) =>
+          updateFromTouch(
+            event.nativeEvent.locationX,
+            event.nativeEvent.locationY,
+          )
+        }
+      >
+        {wheelDots.map((dot) => (
+          <View
+            key={dot.key}
+            pointerEvents="none"
+            style={[
+              styles.wheelDot,
+              {
+                backgroundColor: dot.color,
+                left: dot.left,
+                top: dot.top,
+              },
+            ]}
+          />
+        ))}
+        <View pointerEvents="none" style={styles.wheelCenter}>
+          <View style={[styles.wheelSelected, { backgroundColor: color }]} />
+          <Text style={styles.wheelHex}>{color}</Text>
+        </View>
+      </View>
+    </View>
   );
 }
 
@@ -357,6 +489,42 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
+  },
+  colorWheelWrap: { alignItems: "center" },
+  colorWheel: {
+    width: wheelSize,
+    height: wheelSize,
+    borderRadius: wheelRadius,
+    backgroundColor: "rgba(104,112,131,.12)",
+    overflow: "hidden",
+  },
+  wheelDot: {
+    position: "absolute",
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+  },
+  wheelCenter: {
+    position: "absolute",
+    left: wheelRadius - 45,
+    top: wheelRadius - 45,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+  },
+  wheelSelected: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+  },
+  wheelHex: {
+    fontFamily: fonts.mono,
+    fontSize: 11,
+    color: "#475569",
   },
   colorRow: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   colorOption: {

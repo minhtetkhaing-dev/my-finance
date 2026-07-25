@@ -1082,7 +1082,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
   },
-  title: { fontSize: 32 },
+  title: { fontSize: 26 },
   sub: { fontFamily: fonts.regular, fontSize: 14, marginTop: 4 },
   totalPill: {
     paddingHorizontal: 14,
@@ -1169,7 +1169,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  detailTitle: { fontSize: 26, textAlign: "center" },
+  detailTitle: { fontSize: 22, textAlign: "center" },
   closedPill: {
     paddingHorizontal: 11,
     paddingVertical: 6,
@@ -1218,7 +1218,7 @@ const styles = StyleSheet.create({
   detailHeroTitle: {
     color: "#fff",
     fontFamily: fonts.bold,
-    fontSize: 28,
+    fontSize: 24,
     zIndex: 1,
   },
   detailHeroSub: {
@@ -1230,7 +1230,7 @@ const styles = StyleSheet.create({
   netExpenseValue: {
     color: "#fff",
     fontFamily: fonts.bold,
-    fontSize: 34,
+    fontSize: 26,
     marginTop: 8,
     zIndex: 1,
   },
@@ -1309,16 +1309,20 @@ const styles = StyleSheet.create({
   selectedBill: { gap: 4 },
   fabWrap: {
     position: "absolute",
-    right: 22,
-    bottom: 104,
-    borderRadius: 22,
+    right: 24,
+    bottom: 20,
     zIndex: 30,
   },
   fab: {
-    width: 58,
     height: 58,
-    borderRadius: 22,
+    width: 58,
+    borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.28,
+    shadowRadius: 12,
   },
 });

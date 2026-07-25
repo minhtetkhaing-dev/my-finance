@@ -147,7 +147,7 @@ export function HistoryScreen({
       >
         <View style={[styles.intro, compact && styles.introCompact]}>
           <View style={{ flex: 1 }}>
-            <Title style={{ fontSize: compact ? 27 : 32 }}>
+            <Title style={{ fontSize: compact ? 23 : 27 }}>
               {t("Financial History")}
             </Title>
             <Text style={[styles.sub, { color: palette.muted }]}>
@@ -284,7 +284,7 @@ export function HistoryScreen({
           onChangeText={setQuery}
         />
         <View style={styles.sectionTitle}>
-          <Title style={{ fontSize: 22 }}>{t("Activity")}</Title>
+          <Title style={{ fontSize: 20 }}>{t("Activity")}</Title>
           <Label>{t("Tap to view").toUpperCase()}</Label>
         </View>
         <Card style={{ paddingVertical: 0 }}>

@@ -122,13 +122,10 @@ export function CategoriesScreen({
     );
   }
 
-  const totalRecordedBudget =
-    kind === "expense"
-      ? list.reduce(
-          (sum, category) => sum + categoryBudgetForRange(category),
-          0,
-        )
-      : 0;
+  const totalRecordedBudget = list
+    .reduce((sum, category) => sum + categoryBudgetForRange(category), 0);
+  const summaryProgress =
+    totalRecordedBudget > 0 ? (total / totalRecordedBudget) * 100 : 0;
 
   function createCategory() {
     setEditorOpen(true);
@@ -171,17 +168,14 @@ export function CategoriesScreen({
                 : "TOTAL INCOME FOR PERIOD",
             )}
           </Label>
-          <Title style={{ fontSize: 30 }}>{formatMMK(total)}</Title>
+          <Title style={{ fontSize: 26 }}>{formatMMK(total)}</Title>
           <Progress
-            value={
-              kind === "expense" && totalRecordedBudget > 0
-                ? (total / totalRecordedBudget) * 100
-                : 0
-            }
+            value={summaryProgress}
             danger={kind === "expense" && total > totalRecordedBudget}
-            risk
+            risk={totalRecordedBudget > 0}
+            reverseRisk={kind === "income"}
           />
-          {kind === "expense" && (
+          {totalRecordedBudget > 0 && (
             <Label>
               {t("RECORDED CATEGORY BUDGETS")} {formatMMK(totalRecordedBudget)}
             </Label>
@@ -373,8 +367,11 @@ export function CategoriesScreen({
                       </Text>
                       <Progress
                         value={percentage}
-                        danger={percentage > 100}
+                        danger={
+                          category.kind === "expense" && percentage > 100
+                        }
                         risk
+                        reverseRisk={category.kind === "income"}
                       />
                     </View>
                     {!grid && (

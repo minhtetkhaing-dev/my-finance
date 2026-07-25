@@ -132,7 +132,7 @@ export function LoginScreen() {
                 color={palette.highlight}
               />
             </View>
-            <Title style={{ fontSize: 36 }}>My Finance</Title>
+            <Title style={{ fontSize: 28 }}>My Finance</Title>
             <Text style={[styles.welcome, { color: palette.muted }]}>
               {t(
                 view === "forgot"

@@ -133,7 +133,12 @@ export function CategoryDetailModal({
                     </Label>
                     <Label>{formatMMK(budget)}</Label>
                   </View>
-                  <Progress value={percentage} danger={percentage > 100} risk />
+                  <Progress
+                    value={percentage}
+                    danger={category.kind === "expense" && percentage > 100}
+                    risk
+                    reverseRisk={category.kind === "income"}
+                  />
                 </>
               )}
             </Card>

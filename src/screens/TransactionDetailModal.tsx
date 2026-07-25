@@ -250,8 +250,8 @@ const styles = StyleSheet.create({
   kindText: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 0.6 },
   amount: {
     fontFamily: fonts.bold,
-    fontSize: 36,
-    letterSpacing: -1.1,
+    fontSize: 28,
+    letterSpacing: -0.45,
     marginTop: 10,
     textAlign: "center",
   },

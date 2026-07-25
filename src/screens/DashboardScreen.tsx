@@ -84,7 +84,7 @@ export function DashboardScreen({
     .reduce((sum, item) => sum + item.amount, 0);
   const balance =
     Number(profile?.initial_capital ?? 0) + allIncome - allExpense;
-  const budgets = categories
+  const expenseBudgets = categories
     .filter(
       (item) =>
         item.kind === "expense" &&
@@ -95,7 +95,18 @@ export function DashboardScreen({
         ) > 0,
     )
     .slice(0, 3);
-  const categoryBreakdown = useMemo(() => {
+  const incomeBudgets = categories
+    .filter(
+      (item) =>
+        item.kind === "income" &&
+        effectiveCategoryBudgetForMonth(
+          categoryBudgetHistory,
+          item,
+          currentMonth,
+        ) > 0,
+    )
+    .slice(0, 3);
+  const buildCategoryBreakdown = (kind: "expense" | "income") => {
     const categoryMap = new Map(categories.map((item) => [item.id, item]));
     const totals = new Map<
       string,
@@ -109,7 +120,7 @@ export function DashboardScreen({
     >();
 
     monthTransactions
-      .filter((item) => item.kind === "expense")
+      .filter((item) => item.kind === kind)
       .forEach((item) => {
         const category = item.category_id
           ? categoryMap.get(item.category_id)
@@ -121,7 +132,7 @@ export function DashboardScreen({
           color: category?.color ?? palette.muted,
           icon:
             (category?.icon as keyof typeof Ionicons.glyphMap | undefined) ??
-            "card-outline",
+            (kind === "expense" ? "card-outline" : "cash-outline"),
           amount: 0,
         };
         current.amount += Number(item.amount) || 0;
@@ -153,14 +164,206 @@ export function DashboardScreen({
       ...item,
       percentage: total > 0 ? (item.amount / total) * 100 : 0,
     }));
-  }, [categories, monthTransactions, palette.highlight, palette.muted, t]);
-  const topCategory = categoryBreakdown[0];
+  };
+  const expenseCategoryBreakdown = useMemo(
+    () => buildCategoryBreakdown("expense"),
+    [categories, monthTransactions, palette.highlight, palette.muted, t],
+  );
+  const incomeCategoryBreakdown = useMemo(
+    () => buildCategoryBreakdown("income"),
+    [categories, monthTransactions, palette.highlight, palette.muted, t],
+  );
+  const topExpenseCategory = expenseCategoryBreakdown[0];
+  const topIncomeCategory = incomeCategoryBreakdown[0];
   function add() {
     setEditing(null);
     setOpen(true);
   }
   function edit(item: Transaction) {
     setEditing(item);
+  }
+  function renderBreakdown({
+    data,
+    top,
+    title,
+    totalLabel,
+    topLabel,
+    ofLabel,
+    emptyLabel,
+    totalAmount,
+    delay,
+  }: {
+    data: (typeof expenseCategoryBreakdown);
+    top: (typeof expenseCategoryBreakdown)[number] | undefined;
+    title: string;
+    totalLabel: string;
+    topLabel: string;
+    ofLabel: string;
+    emptyLabel: string;
+    totalAmount: number;
+    delay: number;
+  }) {
+    return (
+      <>
+        <View style={[styles.sectionTitle, { marginTop: 16 }]}>
+          <Title>{t(title)}</Title>
+          <Label>{t("THIS MONTH")}</Label>
+        </View>
+        <Card
+          delay={delay}
+          style={[styles.donutCard, compact && styles.donutCardCompact]}
+        >
+          {data.length && top ? (
+            <>
+              <View
+                style={[
+                  styles.donutWrap,
+                  { width: chartSize, height: chartSize },
+                ]}
+              >
+                <CategoryDonut data={data} palette={palette} size={chartSize} />
+                <View style={styles.donutCenter}>
+                  <Label style={{ textAlign: "center" }}>
+                    {t(totalLabel)}
+                  </Label>
+                  <Text
+                    style={[
+                      styles.donutAmount,
+                      { color: palette.text },
+                      compact && styles.donutAmountCompact,
+                    ]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                  >
+                    {formatMMK(totalAmount)}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.donutInfo}>
+                <Label>{t(topLabel)}</Label>
+                <View style={styles.topCategoryRow}>
+                  <View
+                    style={[
+                      styles.topCategoryIcon,
+                      { backgroundColor: `${top.color}22` },
+                    ]}
+                  >
+                    <Ionicons
+                      name={top.icon as keyof typeof Ionicons.glyphMap}
+                      size={18}
+                      color={top.color}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={[styles.topCategoryName, { color: palette.text }]}
+                      numberOfLines={1}
+                    >
+                      {top.name}
+                    </Text>
+                    <Label>
+                      {Math.round(top.percentage)}% {t(ofLabel)}
+                    </Label>
+                  </View>
+                </View>
+                <View style={styles.legend}>
+                  {data.map((item) => (
+                    <View key={item.id} style={styles.legendItem}>
+                      <View
+                        style={[
+                          styles.legendDot,
+                          { backgroundColor: item.color },
+                        ]}
+                      />
+                      <Text
+                        style={[styles.legendText, { color: palette.text }]}
+                        numberOfLines={1}
+                      >
+                        {item.name}
+                      </Text>
+                      <Label>{Math.round(item.percentage)}%</Label>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </>
+          ) : (
+            <View style={styles.empty}>
+              <Label>{t(emptyLabel)}</Label>
+            </View>
+          )}
+        </Card>
+      </>
+    );
+  }
+  function renderBudgetSection({
+    title,
+    items,
+    kind,
+    emptyLabel,
+    delay,
+  }: {
+    title: string;
+    items: Category[];
+    kind: "expense" | "income";
+    emptyLabel: string;
+    delay: number;
+  }) {
+    return (
+      <>
+        <View style={styles.sectionTitle}>
+          <Title>{t(title)}</Title>
+          <Label>{t("THIS MONTH")}</Label>
+        </View>
+        <Card delay={delay}>
+          {items.length ? (
+            items.map((category) => {
+              const actual = monthTransactions
+                .filter(
+                  (item) =>
+                    item.category_id === category.id && item.kind === kind,
+                )
+                .reduce((sum, item) => sum + item.amount, 0);
+              const budget = effectiveCategoryBudgetForMonth(
+                categoryBudgetHistory,
+                category,
+                currentMonth,
+              );
+              const percentage = (actual / (budget || 1)) * 100;
+              return (
+                <View key={category.id} style={styles.budget}>
+                  <View style={styles.budgetTop}>
+                    <Text style={[styles.itemName, { color: palette.text }]}>
+                      {category.name}
+                    </Text>
+                    <Label
+                      style={{
+                        color:
+                          kind === "expense" && percentage > 100
+                            ? palette.danger
+                            : palette.text,
+                      }}
+                    >
+                      {formatMMK(actual)} / {formatMMK(budget)}
+                    </Label>
+                  </View>
+                  <Progress
+                    value={percentage}
+                    danger={kind === "expense" && percentage > 100}
+                    risk
+                    reverseRisk={kind === "income"}
+                  />
+                </View>
+              );
+            })
+          ) : (
+            <View style={styles.empty}>
+              <Label>{t(emptyLabel)}</Label>
+            </View>
+          )}
+        </Card>
+      </>
+    );
   }
   return (
     <>
@@ -253,144 +456,47 @@ export function DashboardScreen({
             </Title>
           </Card>
         </View>
-        <View style={[styles.sectionTitle, { marginTop: 16 }]}>
-          <Title>{t("Category Breakdown")}</Title>
-          <Label>{t("THIS MONTH")}</Label>
-        </View>
-        <Card delay={240} style={[styles.donutCard, compact && styles.donutCardCompact]}>
-          {categoryBreakdown.length ? (
-            <>
-              <View
-                style={[
-                  styles.donutWrap,
-                  { width: chartSize, height: chartSize },
-                ]}
-              >
-                <CategoryDonut
-                  data={categoryBreakdown}
-                  palette={palette}
-                  size={chartSize}
-                />
-                <View style={styles.donutCenter}>
-                  <Label style={{ textAlign: "center" }}>
-                    {t("TOTAL SPENT")}
-                  </Label>
-                  <Text
-                    style={[
-                      styles.donutAmount,
-                      { color: palette.text },
-                      compact && styles.donutAmountCompact,
-                    ]}
-                    numberOfLines={1}
-                    adjustsFontSizeToFit
-                  >
-                    {formatMMK(expense)}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.donutInfo}>
-                <Label>{t("TOP CATEGORY")}</Label>
-                <View style={styles.topCategoryRow}>
-                  <View
-                    style={[
-                      styles.topCategoryIcon,
-                      { backgroundColor: `${topCategory.color}22` },
-                    ]}
-                  >
-                    <Ionicons
-                      name={topCategory.icon as keyof typeof Ionicons.glyphMap}
-                      size={18}
-                      color={topCategory.color}
-                    />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text
-                      style={[styles.topCategoryName, { color: palette.text }]}
-                      numberOfLines={1}
-                    >
-                      {topCategory.name}
-                    </Text>
-                    <Label>
-                      {Math.round(topCategory.percentage)}% {t("of spending")}
-                    </Label>
-                  </View>
-                </View>
-                <View style={styles.legend}>
-                  {categoryBreakdown.map((item) => (
-                    <View key={item.id} style={styles.legendItem}>
-                      <View
-                        style={[
-                          styles.legendDot,
-                          { backgroundColor: item.color },
-                        ]}
-                      />
-                      <Text
-                        style={[styles.legendText, { color: palette.text }]}
-                        numberOfLines={1}
-                      >
-                        {item.name}
-                      </Text>
-                      <Label>{Math.round(item.percentage)}%</Label>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            </>
-          ) : (
-            <View style={styles.empty}>
-              <Label>{t("NO CATEGORY SPENDING YET")}</Label>
-            </View>
-          )}
-        </Card>
-        <View style={styles.sectionTitle}>
-          <Title>{t("Budget vs Actual")}</Title>
-          <Label>{t("THIS MONTH")}</Label>
-        </View>
-        <Card delay={300}>
-          {budgets.length ? (
-            budgets.map((category) => {
-              const spent = monthTransactions
-                .filter(
-                  (item) =>
-                    item.category_id === category.id && item.kind === "expense",
-                )
-                .reduce((sum, item) => sum + item.amount, 0);
-              const budget = effectiveCategoryBudgetForMonth(
-                categoryBudgetHistory,
-                category,
-                currentMonth,
-              );
-              const percentage = (spent / (budget || 1)) * 100;
-              return (
-                <View key={category.id} style={styles.budget}>
-                  <View style={styles.budgetTop}>
-                    <Text style={[styles.itemName, { color: palette.text }]}>
-                      {category.name}
-                    </Text>
-                    <Label
-                      style={{
-                        color: percentage > 100 ? palette.danger : palette.text,
-                      }}
-                    >
-                      {formatMMK(spent)} /{" "}
-                      {formatMMK(budget)}
-                    </Label>
-                  </View>
-                  <Progress value={percentage} danger={percentage > 100} risk />
-                </View>
-              );
-            })
-          ) : (
-            <View style={styles.empty}>
-              <Label>{t("NO CATEGORY BUDGETS YET")}</Label>
-            </View>
-          )}
-        </Card>
+        {renderBreakdown({
+          data: expenseCategoryBreakdown,
+          top: topExpenseCategory,
+          title: "Expense Category Breakdown",
+          totalLabel: "TOTAL SPENT",
+          topLabel: "TOP CATEGORY",
+          ofLabel: "of spending",
+          emptyLabel: "NO CATEGORY SPENDING YET",
+          totalAmount: expense,
+          delay: 240,
+        })}
+        {renderBudgetSection({
+          title: "Expense Budget vs Actual",
+          items: expenseBudgets,
+          kind: "expense",
+          emptyLabel: "NO CATEGORY BUDGETS YET",
+          delay: 300,
+        })}
+        {renderBreakdown({
+          data: incomeCategoryBreakdown,
+          top: topIncomeCategory,
+          title: "Income Category Breakdown",
+          totalLabel: "TOTAL EARNED",
+          topLabel: "TOP INCOME CATEGORY",
+          ofLabel: "of income",
+          emptyLabel: "NO CATEGORY INCOME YET",
+          totalAmount: income,
+          delay: 330,
+        })}
+        {renderBudgetSection({
+          title: "Income Budget vs Actual",
+          items: incomeBudgets,
+          kind: "income",
+          emptyLabel: "NO INCOME BUDGETS YET",
+          delay: 360,
+        })}
         <View style={styles.sectionTitle}>
           <Title>{t("Recent Transactions")}</Title>
           <Label>{t("Tap to view").toUpperCase()}</Label>
         </View>
-        <Card delay={360} style={{ paddingVertical: 0 }}>
+        <Card delay={390} style={{ paddingVertical: 0 }}>
           {transactions.length ? (
             transactions.slice(0, 4).map((item) => (
               <Pressable key={item.id} onPress={() => edit(item)}>
@@ -628,11 +734,11 @@ const styles = StyleSheet.create({
   balanceValue: {
     fontFamily: fonts.bold,
     color: "#fff",
-    fontSize: 39,
+    fontSize: 30,
     letterSpacing: -1.2,
     zIndex: 2,
   },
-  balanceValueCompact: { fontSize: 32 },
+  balanceValueCompact: { fontSize: 26 },
   trend: {
     alignSelf: "flex-start",
     paddingHorizontal: 11,
