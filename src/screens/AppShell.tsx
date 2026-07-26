@@ -25,6 +25,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { buildFinanceNotifications } from "../lib/financeNotifications";
 import { GlassSurface } from "../components/GlassSurface";
 import { AmbientDecorations } from "../components/AmbientDecorations";
+import { AiChat } from "../components/AiChat";
 
 const tabs = [
   {
@@ -164,6 +165,7 @@ export function AppShell() {
         }
         onSaved={data.refresh}
       />
+      <AiChat />
     </SafeAreaView>
   );
 }
